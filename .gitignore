@@ -1,0 +1,93 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# IDE - JetBrains Rider
+.idea/
+*.sln.iml
+.idea/
+*.sln.iml
+*_rider.*
+
+# .NET Core build artifacts
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# User-specific files
+*.rsuser
+*.DotSettings
+
+# Database & EF Core
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+Migrations/
+
+# Logs & Secret files
+logs/
+*.log
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+secrets.json
+*.secret
+.env
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Publish & deployment
+.DS_Store
+*.[Pp]ublish.xml
+*.azurePubxml
+*.pubxml
+*.pubxml.user
+*.publishproj
+PublishProfiles/
+node_modules/
+bower_components/
+
+# Testing
+TestResults/
+[Tt]est[Rr]esult*/
+coverage/
