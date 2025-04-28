@@ -32,8 +32,5 @@ namespace DermatologyAPI.Models
 
         [Timestamp]
         public required byte[]? RowVersion { get; set; }
-
-        public ICollection<Diagnosis>? Diagnoses { get; set; }
-        public ICollection<Consultation>? Consultations { get; set; }
     }
 }
