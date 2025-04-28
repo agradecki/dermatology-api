@@ -12,7 +12,7 @@ namespace DermatologyAPI.Models
         public required int PatientId { get; set; }
 
         [Required]
-        public required string DermatologistId { get; set; }
+        public required int DermatologistId { get; set; }
 
         [Required]
         public required int LesionId {  get; set; }
