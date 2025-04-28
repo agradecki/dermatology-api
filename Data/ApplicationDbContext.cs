@@ -21,35 +21,11 @@ namespace DermatologyApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Patient>()
-                .HasMany(p => p.Diagnoses)
-                .WithOne(d => d.Patient)
-                .HasForeignKey(d => d.PatientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Patient>()
-                .HasMany(p => p.Consultations)
-                .WithOne(dc=> c.Patient)
-                .HasForeignKey(c => c.PatientId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Dermatologist>()
-                .HasMany(d => d.Diagnoses)
-                .WithOne(di => di.Dermatologist)
-                .HasForeignKey(di => di.DermatologistId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Dermatologist>()
-                .HasMany(d => d.Consultations)
-                .WithOne(c => c.Dermatologist)
-                .HasForeignKey(c => c.DermatologistId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.Entity<Lesion>()
                 .HasMany(l => l.Diagnoses)
                 .WithOne(d => d.Lesion)
                 .HasForeignKey(d => d.LesionId)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
