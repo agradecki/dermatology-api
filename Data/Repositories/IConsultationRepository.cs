@@ -13,5 +13,7 @@ namespace DermatologyApi.Data.Repositories
         Task<Consultation> UpdateAsync(Consultation consultation);
         Task<bool> DeleteAsync(int id);
         Task<bool> TransferConsultationsAsync(List<Transfer> transfers);
+        Task<bool> IsTimeSlotAvailableAsync(int dermatologistId, DateTime consultationDate, int? consultationId = null);
+        Task<(IEnumerable<Consultation> Consultations, int TotalCount)> GetPagedAsync(int page, int size);
     }
 }

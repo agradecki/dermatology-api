@@ -26,9 +26,9 @@ namespace DermatologyAPI.Models
         public byte[]? RowVersion { get; set; }
 
         [ForeignKey("PatientId")]
-        public required Patient Patient { get; set; }
+        public Patient? Patient { get; set; }
 
         [ForeignKey("DermatologistId")]
-        public required Dermatologist Dermatologist { get; set; }
+        public Dermatologist? Dermatologist { get; set; }
     }
 }

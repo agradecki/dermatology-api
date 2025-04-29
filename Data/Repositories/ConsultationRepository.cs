@@ -153,6 +153,38 @@ namespace DermatologyApi.Data.Repositories
             }
         }
 
+        public async Task<bool> IsTimeSlotAvailableAsync(int dermatologistId, DateTime consultationDate, int? consultationId = null)
+        {
+            var startOfDay = consultationDate.Date;
+            var endOfDay = consultationDate.Date.AddDays(1).AddTicks(-1);
+
+            var existingConsultation = await _context.Consultations
+                .Where(c => c.DermatologistId == dermatologistId &&
+                            c.ConsultationDate >= startOfDay && c.ConsultationDate <= endOfDay &&
+                            (consultationId == null || c.Id != consultationId))
+                .FirstOrDefaultAsync();
+
+            return existingConsultation == null;
+        }
+
+        public async Task<(IEnumerable<Consultation> Consultations, int TotalCount)> GetPagedAsync(int page, int size)
+        {
+            var query = _context.Consultations
+                .Include(c => c.Patient)
+                .Include(c => c.Dermatologist)
+                .AsQueryable();
+
+            var totalCount = await query.CountAsync();
+
+            var consultations = await query
+                .OrderBy(c => c.ConsultationDate)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+
+            return (consultations, totalCount);
+        }
+
         private async Task<bool> ConsultationExists(int id)
         {
             return await _context.Consultations.AnyAsync(e => e.Id == id);

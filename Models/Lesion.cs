@@ -16,7 +16,7 @@ namespace DermatologyAPI.Models
         public required string Location { get; set; }
 
         [Required]
-        public DateTime DiscoveryTime { get; set; }
+        public DateTime DiscoveryDate { get; set; }
 
         [Required]
         [StringLength(500)]
@@ -26,10 +26,8 @@ namespace DermatologyAPI.Models
         public byte[]? RowVersion { get; set; }
 
         [ForeignKey("PatientId")]
-        public required Patient Patient { get; set; }
+        public Patient? Patient { get; set; }
 
         public ICollection<Diagnosis>? Diagnoses { get; set; }
-
-
     }
 }

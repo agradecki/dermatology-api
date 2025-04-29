@@ -33,6 +33,6 @@ namespace DermatologyAPI.Models
         public required string PhoneNumber { get; set; }
 
         [Timestamp]
-        public required byte[]? RowVersion { get; set; }
+        public byte[]? RowVersion { get; set; }
     }
 }
