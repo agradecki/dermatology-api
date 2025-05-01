@@ -10,7 +10,6 @@ namespace DermatologyApi.DTOs
         public required int LesionId { get; set; }
         public DateTime DiagnosisDate { get; set; }
         public required string Description { get; set; }
-        public required string ETag { get; set; }
     }
 
     public class DiagnosisCreateDto

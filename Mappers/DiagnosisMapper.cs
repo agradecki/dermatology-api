@@ -15,7 +15,6 @@ namespace DermatologyApi.Mappers
                 LesionId = diagnosis.LesionId,
                 DiagnosisDate = diagnosis.DiagnosisDate,
                 Description = diagnosis.Description,
-                ETag = Convert.ToBase64String(diagnosis.RowVersion)
             };
         }
     }

@@ -11,7 +11,6 @@ namespace DermatologyApi.DTOs
         public required string PhoneNumber { get; set; }
         public required string Email { get; set; }
         public required string Address { get; set; }
-        public required string ETag { get; set; }
     }
 
     public class PatientCreateDto

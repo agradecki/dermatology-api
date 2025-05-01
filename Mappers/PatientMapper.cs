@@ -16,7 +16,6 @@ namespace DermatologyApi.Mappers
                 PhoneNumber = patient.PhoneNumber,
                 Email = patient.Email,
                 Address = patient.Address,
-                ETag = Convert.ToBase64String(patient.RowVersion)
             };
         }
     }

@@ -16,7 +16,6 @@ namespace DermatologyApi.Mappers
                 Description = consultation.Description,
                 PatientName = consultation.Patient?.FirstName,
                 DermatologistName = consultation.Dermatologist?.FirstName,
-                ETag = Convert.ToBase64String(consultation.RowVersion),
             };
         }
         public static Consultation MapFromCreateDto(ConsultationCreateDto dto)

@@ -11,7 +11,6 @@ namespace DermatologyApi.DTOs
         public string? Description { get; set; }
         public string? PatientName { get; set; }
         public string? DermatologistName { get; set; }
-        public string? ETag { get; set; }
     }
 
     public class ConsultationCreateDto

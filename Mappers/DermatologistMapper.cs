@@ -16,7 +16,6 @@ namespace DermatologyApi.Mappers
                 Specialization = dermatologist.Specialization,
                 Email = dermatologist.Email,
                 PhoneNumber = dermatologist.PhoneNumber,
-                ETag = Convert.ToBase64String(dermatologist.RowVersion)
             };
         }
     }

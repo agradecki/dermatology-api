@@ -14,7 +14,6 @@ namespace DermatologyApi.Mappers
                 Location = lesion.Location,
                 DiscoveryDate = lesion.DiscoveryDate,
                 Description = lesion.Description,
-                ETag = Convert.ToBase64String(lesion.RowVersion)
             };
         }
     }
