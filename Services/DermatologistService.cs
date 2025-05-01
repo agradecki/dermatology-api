@@ -2,6 +2,7 @@
 using DermatologyApi.DTOs;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Services
 {
@@ -16,6 +17,15 @@ namespace DermatologyApi.Services
             _dermatologistRepository = dermatologistRepository;
             _diagnosisRepository = diagnosisRepository;
             _consultationRepository = consultationRepository;
+        }
+
+        public async Task<Dermatologist> GetDermatologistEntityByIdAsync(int id)
+        {
+            var dermatologist = await _dermatologistRepository.GetByIdAsync(id);
+            if (dermatologist == null)
+                return null;
+
+            return dermatologist;
         }
 
         public async Task<IEnumerable<DermatologistDto>> GetAllDermatologistsAsync()
@@ -55,13 +65,15 @@ namespace DermatologyApi.Services
             if (existingDermatologist == null)
                 return null;
 
+            if (!existingDermatologist.RowVersion.SequenceEqual(rowVersion))
+                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+
             existingDermatologist.FirstName = dermatologistDto.FirstName;
             existingDermatologist.LastName = dermatologistDto.LastName;
             existingDermatologist.LicenseNumber = dermatologistDto.LicenseNumber;
             existingDermatologist.Specialization = dermatologistDto.Specialization;
             existingDermatologist.Email = dermatologistDto.Email;
             existingDermatologist.PhoneNumber = dermatologistDto.PhoneNumber;
-            existingDermatologist.RowVersion = rowVersion;
 
             var updatedDermatologist = await _dermatologistRepository.UpdateAsync(existingDermatologist);
             if (updatedDermatologist == null)
@@ -70,7 +82,7 @@ namespace DermatologyApi.Services
             return DermatologistMapper.MapToDto(updatedDermatologist);
         }
 
-        public async Task<DermatologistDto> PatchDermatologistAsync(int id, DermatologistPatchDto dermatologistDto, byte[] rowVersion)
+        public async Task<DermatologistDto> PatchDermatologistAsync(int id, DermatologistPatchDto dermatologistDto)
         {
             var existingDermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (existingDermatologist == null)
@@ -93,8 +105,6 @@ namespace DermatologyApi.Services
 
             if (dermatologistDto.PhoneNumber != null)
                 existingDermatologist.PhoneNumber = dermatologistDto.PhoneNumber;
-
-            existingDermatologist.RowVersion = rowVersion;
 
             var updatedDermatologist = await _dermatologistRepository.PatchAsync(existingDermatologist);
             if (updatedDermatologist == null)

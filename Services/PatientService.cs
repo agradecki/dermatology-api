@@ -2,6 +2,7 @@
 using DermatologyApi.DTOs;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Services
 {
@@ -16,6 +17,15 @@ namespace DermatologyApi.Services
             _patientRepository = patientRepository;
             _diagnosisRepository = diagnosisRepository;
             _consultationRepository = consultationRepository;
+        }
+
+        public async Task<Patient> GetPatientEntityByIdAsync(int id)
+        {
+            var patient = await _patientRepository.GetByIdAsync(id);
+            if (patient == null)
+                return null;
+
+            return patient;
         }
 
         public async Task<IEnumerable<PatientDto>> GetAllPatientsAsync()
@@ -49,11 +59,14 @@ namespace DermatologyApi.Services
             return PatientMapper.MapToDto(createdPatient);
         }
 
-        public async Task<PatientDto> UpdatePatientAsync(int id, PatientUpdateDto patientDto, byte[] ETag)
+        public async Task<PatientDto> UpdatePatientAsync(int id, PatientUpdateDto patientDto, byte[] rowVersion)
         {
             var existingPatient = await _patientRepository.GetByIdAsync(id);
             if (existingPatient == null)
                 return null;
+
+            if (!existingPatient.RowVersion.SequenceEqual(rowVersion))
+                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
 
             existingPatient.FirstName = patientDto.FirstName;
             existingPatient.LastName = patientDto.LastName;
@@ -61,7 +74,6 @@ namespace DermatologyApi.Services
             existingPatient.PhoneNumber = patientDto.PhoneNumber;
             existingPatient.Email = patientDto.Email;
             existingPatient.Address = patientDto.Address;
-            existingPatient.RowVersion = ETag;
 
             var updatedPatient = await _patientRepository.UpdateAsync(existingPatient);
             if (updatedPatient == null)
@@ -70,7 +82,7 @@ namespace DermatologyApi.Services
             return PatientMapper.MapToDto(updatedPatient);
         }
 
-        public async Task<PatientDto> PatchPatientAsync(int id, PatientPatchDto patientDto, byte[] ETag)
+        public async Task<PatientDto> PatchPatientAsync(int id, PatientPatchDto patientDto)
         {
             var existingPatient = await _patientRepository.GetByIdAsync(id);
             if (existingPatient == null)
@@ -93,8 +105,6 @@ namespace DermatologyApi.Services
 
             if (patientDto.Address != null)
                 existingPatient.Address = patientDto.Address;
-
-            existingPatient.RowVersion = ETag;
 
             var updatedPatient = await _patientRepository.PatchAsync(existingPatient);
             if (updatedPatient == null)
@@ -122,7 +132,6 @@ namespace DermatologyApi.Services
             var consultations = await _consultationRepository.GetByPatientIdAsync(patientId);
             return consultations.Select(ConsultationMapper.MapToDto);
         }
-
 
         public async Task<bool> DeletePatientAsync(int id)
         {

@@ -1,13 +1,15 @@
 ﻿using DermatologyApi.DTOs;
+using DermatologyAPI.Models;
 
 namespace DermatologyApi.Services
 {
     public interface IConsultationService
     {
+        Task<Consultation> GetConsultationEntityByIdAsync(int id);
         Task<PagedResult<ConsultationDto>> GetAllConsultationsAsync(int page, int size);
         Task<ConsultationDto> GetConsultationByIdAsync(int id);
         Task<ConsultationDto> CreateConsultationAsync(ConsultationCreateDto consultationDto);
-        Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, string etag);
+        Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion);
         Task DeleteConsultationAsync(int id);
         Task TransferConsultationsAsync(TransferRequest[] transfers);
     }

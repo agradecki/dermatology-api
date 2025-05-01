@@ -2,6 +2,7 @@
 using DermatologyApi.DTOs;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Services
 {
@@ -14,6 +15,15 @@ namespace DermatologyApi.Services
         {
             _lesionRepository = lesionRepository;
             _petientRepository = petientRepository;
+        }
+
+        public async Task<Lesion> GetLesionEntityByIdAsync(int id)
+        {
+            var lesion = await _lesionRepository.GetByIdAsync(id);
+            if (lesion == null)
+                return null;
+
+            return lesion;
         }
 
         public async Task<IEnumerable<LesionDto>> GetAllLesionsAsync()
@@ -60,11 +70,13 @@ namespace DermatologyApi.Services
             if (existingLesion == null)
                 return null;
 
+            if (!existingLesion.RowVersion.SequenceEqual(rowVersion))
+                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+
             existingLesion.PatientId = lesionDto.PatientId;
             existingLesion.Location = lesionDto.Location;
             existingLesion.DiscoveryDate = lesionDto.DiscoveryDate;
             existingLesion.Description = lesionDto.Description;
-            existingLesion.RowVersion = rowVersion;
 
             var updatedLesion = await _lesionRepository.UpdateAsync(existingLesion);
             if (updatedLesion == null)
@@ -73,7 +85,7 @@ namespace DermatologyApi.Services
             return LesionMapper.MapToDto(updatedLesion);
         }
 
-        public async Task<LesionDto> PatchLesionAsync(int id, LesionPatchDto lesionDto, byte[] rowVersion)
+        public async Task<LesionDto> PatchLesionAsync(int id, LesionPatchDto lesionDto)
         {
             var existingLesion = await _lesionRepository.GetByIdAsync(id);
             if (existingLesion == null)
@@ -96,8 +108,6 @@ namespace DermatologyApi.Services
 
             if (lesionDto.Description != null)
                 existingLesion.Description = lesionDto.Description;
-
-            existingLesion.RowVersion = rowVersion;
 
             var updatedLesion = await _lesionRepository.PatchAsync(existingLesion);
             if (updatedLesion == null)

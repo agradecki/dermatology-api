@@ -2,6 +2,7 @@
 using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
 using DermatologyApi.Mappers;
+using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Services
@@ -19,6 +20,15 @@ namespace DermatologyApi.Services
             _patientRepository = patientRepository;
             _dermatologistRepository = dermatologistRepository;
             _dbContext = dbContext;
+        }
+
+        public async Task<Consultation> GetConsultationEntityByIdAsync(int id)
+        {
+            var consultation = await _consultationRepository.GetByIdAsync(id);
+            if (consultation == null)
+                return null;
+
+            return consultation;
         }
 
         public async Task<PagedResult<ConsultationDto>> GetAllConsultationsAsync(int page, int size)
@@ -78,18 +88,18 @@ namespace DermatologyApi.Services
             }
         }
 
-        public async Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, string etag)
+        public async Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion)
         {
-            var consultation = await _consultationRepository.GetByIdAsync(id);
-            if (consultation == null)
+            var existingConsultation = await _consultationRepository.GetByIdAsync(id);
+            if (existingConsultation == null)
                 throw new KeyNotFoundException($"Consultation with ID {id} not found");
 
-            if (etag != Convert.ToBase64String(consultation.RowVersion))
-                throw new DbUpdateConcurrencyException("The consultation has been modified by another user");
+            if (!existingConsultation.RowVersion.SequenceEqual(rowVersion))
+                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
 
-            ConsultationMapper.MapFromUpdateDto(consultationDto, consultation);
+            ConsultationMapper.MapFromUpdateDto(consultationDto, existingConsultation);
 
-            consultation = await _consultationRepository.UpdateAsync(consultation);
+            var consultation = await _consultationRepository.UpdateAsync(existingConsultation);
             return ConsultationMapper.MapToDto(consultation);
         }
 

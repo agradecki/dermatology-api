@@ -2,6 +2,7 @@
 using DermatologyApi.DTOs;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Services
 {
@@ -22,6 +23,15 @@ namespace DermatologyApi.Services
             _patientRepository = patientRepository;
             _dermatologistRepository = dermatologistRepository;
             _lesionRepository = lesionRepository;
+        }
+
+        public async Task<Diagnosis> GetDiagnosisEntityByIdAsync(int id)
+        {
+            var diagnosis = await _diagnosisRepository.GetByIdAsync(id);
+            if (diagnosis == null)
+                return null;
+
+            return diagnosis;
         }
 
         public async Task<IEnumerable<DiagnosisDto>> GetAllDiagnosesAsync()
@@ -90,12 +100,14 @@ namespace DermatologyApi.Services
             if (existingDiagnosis == null)
                 return null;
 
+            if (!existingDiagnosis.RowVersion.SequenceEqual(rowVersion))
+                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+
             existingDiagnosis.PatientId = diagnosisDto.PatientId;
             existingDiagnosis.DermatologistId = diagnosisDto.DermatologistId;
             existingDiagnosis.LesionId = diagnosisDto.LesionId;
             existingDiagnosis.DiagnosisDate = diagnosisDto.DiagnosisDate;
             existingDiagnosis.Description = diagnosisDto.Description;
-            existingDiagnosis.RowVersion = rowVersion;
 
             var updatedDiagnosis = await _diagnosisRepository.UpdateAsync(existingDiagnosis);
             if (updatedDiagnosis == null)
