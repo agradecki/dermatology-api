@@ -31,6 +31,6 @@ namespace DermatologyAPI.Models
         public required string Address {  get; set; }
 
         [Timestamp]
-        public byte[]? RowVersion { get; set; }
+        public byte[] RowVersion { get; set; }
     }
 }
