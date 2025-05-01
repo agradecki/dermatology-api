@@ -1,11 +1,50 @@
+using DermatologyApi.Data;
+using DermatologyApi.Data.Repositories;
+using DermatologyApi.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 
-builder.Services.AddControllers();
+// Configure PostgreSQL database
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register repositories
+builder.Services.AddScoped<IPatientRepository, PatientRepository>();
+builder.Services.AddScoped<IDermatologistRepository, DermatologistRepository>();
+builder.Services.AddScoped<ILesionRepository, LesionRepository>();
+builder.Services.AddScoped<IDiagnosisRepository, DiagnosisRepository>();
+builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
+
+// Register services
+builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IDermatologistService, DermatologistService>();
+builder.Services.AddScoped<ILesionService, LesionService>();
+builder.Services.AddScoped<IDiagnosisService, DiagnosisService>();
+builder.Services.AddScoped<IConsultationService, ConsultationService>();
+
+// Configure Swagger
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Dermatology API",
+        Version = "v1",
+        Description = "REST API dla systemu dermatologicznego"
+    });
+});
 
 var app = builder.Build();
 
@@ -13,7 +52,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dermatology API v1"));
 }
 
 app.UseHttpsRedirection();
