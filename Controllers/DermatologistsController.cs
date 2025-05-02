@@ -45,7 +45,7 @@ namespace DermatologyApi.Controllers
         public async Task<ActionResult<DermatologistDto>> CreateDermatologist(DermatologistCreateDto dermatologistDto)
         {
             var dermatologist = await _dermatologistService.CreateDermatologistAsync(dermatologistDto);
-            return CreatedAtAction(nameof(Dermatologist), new { id = dermatologist.Id }, dermatologist);
+            return CreatedAtAction(nameof(GetDermatologistsById), new { id = dermatologist.Id }, dermatologist);
         }
 
         [HttpPut("{id}")]

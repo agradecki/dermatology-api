@@ -53,7 +53,7 @@ namespace DermatologyApi.Services
                 Location = lesionDto.Location,
                 DiscoveryDate = lesionDto.DiscoveryDate,
                 Description = lesionDto.Description,
-                Patient = patient
+                Patient = patient,
             };
 
             var createdLesion = await _lesionRepository.CreateAsync(lesion);

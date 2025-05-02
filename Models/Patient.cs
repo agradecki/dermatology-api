@@ -20,7 +20,7 @@ namespace DermatologyAPI.Models
 
         [Required]
         [StringLength(15)]
-        public required string PhoneNumber {  get; set; }
+        public required string PhoneNumber { get; set; }
 
         [Required]
         [EmailAddress]
@@ -28,9 +28,9 @@ namespace DermatologyAPI.Models
         public required string Email { get; set; }
 
         [Required]
-        public required string Address {  get; set; }
+        public required string Address { get; set; }
 
         [Timestamp]
-        public byte[] RowVersion { get; set; }
+        public byte[] RowVersion { get; set; } = new byte[8];
     }
 }

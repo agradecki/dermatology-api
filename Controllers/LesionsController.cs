@@ -24,7 +24,7 @@ namespace DermatologyApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<LesionDto>> GetLesion(int id)
+        public async Task<ActionResult<LesionDto>> GetLesionById(int id)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace DermatologyApi.Controllers
         public async Task<ActionResult<LesionDto>> CreateLesion(LesionCreateDto lesionDto)
         {
             var lesion = await _lesionService.CreateLesionAsync(lesionDto);
-            return CreatedAtAction(nameof(GetLesion), new { id = lesion.Id }, lesion);
+            return CreatedAtAction(nameof(GetLesionById), new { id = lesion.Id }, lesion);
         }
 
         [HttpPut("{id}")]

@@ -25,7 +25,7 @@ namespace DermatologyApi.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ConsultationDto>> GetConsultation(int id)
+        public async Task<ActionResult<ConsultationDto>> GetConsultationById(int id)
         {
             try
             {
@@ -44,7 +44,7 @@ namespace DermatologyApi.Controllers
             try
             {
                 var consultation = await _consultationService.CreateConsultationAsync(consultationDto);
-                return CreatedAtAction(nameof(GetConsultation), new { id = consultation.Id }, consultation);
+                return CreatedAtAction(nameof(GetConsultationById), new { id = consultation.Id }, consultation);
             }
             catch (InvalidOperationException ex)
             {
