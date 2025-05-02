@@ -59,7 +59,6 @@ artifacts/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
-Migrations/
 
 # Logs & Secret files
 logs/

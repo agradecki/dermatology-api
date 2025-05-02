@@ -21,6 +21,28 @@ namespace DermatologyApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Patient>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
+            //.IsRowVersion()
+            //.ValueGeneratedOnAddOrUpdate();
+
+            modelBuilder.Entity<Dermatologist>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
+
+            modelBuilder.Entity<Lesion>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
+
+            modelBuilder.Entity<Diagnosis>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
+
+            modelBuilder.Entity<Consultation>()
+            .Property(p => p.RowVersion)
+            .IsConcurrencyToken();
+
             modelBuilder.Entity<Lesion>()
                 .HasMany(l => l.Diagnoses)
                 .WithOne(d => d.Lesion)

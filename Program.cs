@@ -1,5 +1,6 @@
 using DermatologyApi.Data;
 using DermatologyApi.Data.Repositories;
+using DermatologyApi.Filters;
 using DermatologyApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -17,7 +18,11 @@ builder.Services.AddControllers()
 
 // Configure PostgreSQL database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+        .EnableSensitiveDataLogging()
+        .LogTo(Console.WriteLine)
+);
+
 
 // Register repositories
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
@@ -44,15 +49,22 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description = "REST API dla systemu dermatologicznego"
     });
+
+    c.OperationFilter<AddIfMatchHeaderOperationFilter>();
 });
 
+builder.WebHost.UseUrls("http://*:80");
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dermatology API v1"));
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Dermatology API v1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseHttpsRedirection();
@@ -60,5 +72,12 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+//Migrations
+//using (var scope = app.Services.CreateScope())
+//{
+//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    dbContext.Database.Migrate();
+//}
 
 app.Run();
