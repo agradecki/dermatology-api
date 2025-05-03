@@ -1,4 +1,5 @@
 ﻿using DermatologyApi.DTOs;
+using DermatologyApi.Mappers;
 using DermatologyApi.Services;
 using DermatologyAPI.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -32,8 +33,17 @@ namespace DermatologyApi.Controllers
         {
             try
             {
-                var dermatologist = await _dermatologistService.GetDermatologistByIdAsync(id);
-                return Ok(dermatologist);
+                var dermatologist = await _dermatologistService.GetDermatologistEntityByIdAsync(id);
+                if (dermatologist == null)
+                    return NotFound();
+
+                var etag = Convert.ToBase64String(dermatologist.RowVersion);
+                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+                if (etag == ifNoneMatch)
+                    return StatusCode(304);
+
+                Response.Headers["ETag"] = etag;
+                return Ok(DermatologistMapper.MapToDto(dermatologist));
             }
             catch (Exception ex)
             {

@@ -29,12 +29,17 @@ namespace DermatologyApi.Controllers
         {
             try 
             {
-                var patient = await _patientService.GetPatientByIdAsync(id);
-
+                var patient = await _patientService.GetPatientEntityByIdAsync(id);
                 if (patient == null)
                     return NotFound();
 
-                return Ok(patient);
+                var etag = Convert.ToBase64String(patient.RowVersion);
+                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+                if (etag == ifNoneMatch)
+                    return StatusCode(304);
+
+                Response.Headers["ETag"] = etag;
+                return Ok(PatientMapper.MapToDto(patient));
             }
             catch (Exception ex)
             {

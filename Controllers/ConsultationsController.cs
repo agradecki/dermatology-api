@@ -3,6 +3,7 @@ using DermatologyApi.Services;
 using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using DermatologyApi.Mappers;
 
 namespace DermatologyApi.Controllers
 {
@@ -37,7 +38,7 @@ namespace DermatologyApi.Controllers
                     return StatusCode(304);
 
                 Response.Headers["ETag"] = etag;
-                return Ok(consultation);
+                return Ok(ConsultationMapper.MapToDto(consultation));
             }
             catch (KeyNotFoundException ex)
             {
@@ -114,24 +115,6 @@ namespace DermatologyApi.Controllers
             catch (KeyNotFoundException ex)
             {
                 return NotFound(ex.Message);
-            }
-        }
-
-        [HttpPost("transfers")]
-        public async Task<ActionResult> TransferConsultations(TransferRequest[] transfers)
-        {
-            try
-            {
-                await _consultationService.TransferConsultationsAsync(transfers);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
             }
         }
     }

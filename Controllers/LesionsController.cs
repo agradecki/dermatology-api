@@ -1,5 +1,7 @@
 ﻿using DermatologyApi.DTOs;
+using DermatologyApi.Mappers;
 using DermatologyApi.Services;
+using DermatologyAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,8 +30,17 @@ namespace DermatologyApi.Controllers
         {
             try
             {
-                var lesion = await _lesionService.GetLesionByIdAsync(id);
-                return Ok(lesion);
+                var lesion = await _lesionService.GetLesionEntityByIdAsync(id);
+                if (lesion == null)
+                    return NotFound();
+
+                var etag = Convert.ToBase64String(lesion.RowVersion);
+                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+                if (etag == ifNoneMatch)
+                    return StatusCode(304);
+
+                Response.Headers["ETag"] = etag;
+                return Ok(LesionMapper.MapToDto(lesion));
             }
             catch (KeyNotFoundException ex)
             {
