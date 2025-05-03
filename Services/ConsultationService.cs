@@ -72,20 +72,18 @@ namespace DermatologyApi.Services
                 throw new InvalidOperationException("The selected time slot is not available");
             }
 
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-            try
-            {
-                var consultation = ConsultationMapper.MapFromCreateDto(consultationDto);
-                consultation = await _consultationRepository.CreateAsync(consultation);
+            var consultation = new Consultation {
+                PatientId = consultationDto.PatientId,
+                DermatologistId = consultationDto.DermatologistId,
+                ConsultationDate = consultationDto.ConsultationDate,
+                Description = consultationDto.Description,
+                Patient = patient,
+                Dermatologist = dermatologist
+            };
 
-                await transaction.CommitAsync();
-                return ConsultationMapper.MapToDto(consultation);
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
+            var createdConsultation = await _consultationRepository.CreateAsync(consultation);
+
+            return ConsultationMapper.MapToDto(createdConsultation);
         }
 
         public async Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion)

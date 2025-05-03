@@ -1,6 +1,6 @@
 ﻿using DermatologyApi.DTOs;
 using DermatologyApi.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
+using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +29,14 @@ namespace DermatologyApi.Controllers
         {
             try
             {
-                var consultation = await _consultationService.GetConsultationByIdAsync(id);
+                var consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
+                var etag = Convert.ToBase64String(consultation.RowVersion);
+
+                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+                if (etag == ifNoneMatch)
+                    return StatusCode(304);
+
+                Response.Headers["ETag"] = etag;
                 return Ok(consultation);
             }
             catch (KeyNotFoundException ex)
@@ -44,6 +51,10 @@ namespace DermatologyApi.Controllers
             try
             {
                 var consultation = await _consultationService.CreateConsultationAsync(consultationDto);
+
+                if (consultation == null)
+                    return NotFound("Patient or dermatologist not found.");
+
                 return CreatedAtAction(nameof(GetConsultationById), new { id = consultation.Id }, consultation);
             }
             catch (InvalidOperationException ex)
@@ -65,14 +76,22 @@ namespace DermatologyApi.Controllers
                 if (string.IsNullOrEmpty(etagBase64))
                     return BadRequest("ETag header is required");
 
-                byte[] etag = Convert.FromBase64String(etagBase64);
+                var consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
+                var etag = Convert.ToBase64String(consultation.RowVersion);
 
-                var consultation = await _consultationService.UpdateConsultationAsync(id, consultationDto, etag);
-                var updatedConsultation = await _consultationService.GetConsultationEntityByIdAsync(id);
-                var newEtag = Convert.ToBase64String(updatedConsultation.RowVersion);
+                if (etagBase64 != etag)
+                {
+                    return StatusCode(412, "Precondition failed: The resource has been modified by another user.");
+                }
 
-                Response.Headers.Add("ETag", newEtag);
-                return Ok(consultation);
+                var updatedConsultation = await _consultationService.UpdateConsultationAsync(id, consultationDto, Convert.FromBase64String(etag));
+
+                consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
+                etag = Convert.ToBase64String(consultation.RowVersion);
+
+                Response.Headers["ETag"] = etag;
+
+                return Ok(updatedConsultation);
             }
             catch (KeyNotFoundException ex)
             {

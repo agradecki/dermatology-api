@@ -14,8 +14,6 @@ namespace DermatologyApi.Mappers
                 DermatologistId = consultation.DermatologistId,
                 ConsultationDate = consultation.ConsultationDate,
                 Description = consultation.Description,
-                PatientName = consultation.Patient?.FirstName,
-                DermatologistName = consultation.Dermatologist?.FirstName,
             };
         }
         public static Consultation MapFromCreateDto(ConsultationCreateDto dto)
@@ -25,7 +23,7 @@ namespace DermatologyApi.Mappers
                 PatientId = dto.PatientId,
                 DermatologistId = dto.DermatologistId,
                 ConsultationDate = dto.ConsultationDate,
-                Description = dto.Description
+                Description = dto.Description,
             };
         }
 

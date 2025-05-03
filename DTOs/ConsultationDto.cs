@@ -9,8 +9,6 @@ namespace DermatologyApi.DTOs
         public required int DermatologistId { get; set; }
         public required DateTime ConsultationDate { get; set; }
         public string? Description { get; set; }
-        public string? PatientName { get; set; }
-        public string? DermatologistName { get; set; }
     }
 
     public class ConsultationCreateDto

@@ -56,43 +56,29 @@ namespace DermatologyApi.Data.Repositories
 
         public async Task<Consultation> GetByIdAsync(int id)
         {
-            return await _context.Consultations
-                .Include(c => c.Patient)
-                .Include(c => c.Dermatologist)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            return await _context.Consultations.FindAsync(id);
         }
 
         public async Task<Consultation> CreateAsync(Consultation consultation)
         {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            var patient = await _context.Patients.FindAsync(consultation.PatientId);
+            if (patient == null)
             {
-                try
-                {
-                    var patient = await _context.Patients.FindAsync(consultation.PatientId);
-                    if (patient == null)
-                    {
-                        throw new KeyNotFoundException($"Nie znaleziono pacjenta o ID {consultation.PatientId}");
-                    }
-
-                    var dermatologist = await _context.Dermatologists.FindAsync(consultation.DermatologistId);
-                    if (dermatologist == null)
-                    {
-                        throw new KeyNotFoundException($"Nie znaleziono dermatologa o ID {consultation.DermatologistId}");
-                    }
-
-                    _context.Consultations.Add(consultation);
-                    await _context.SaveChangesAsync();
-
-                    await transaction.CommitAsync();
-                    return consultation;
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
+                throw new KeyNotFoundException($"Nie znaleziono pacjenta o ID {consultation.PatientId}");
             }
+
+            var dermatologist = await _context.Dermatologists.FindAsync(consultation.DermatologistId);
+            if (dermatologist == null)
+            {
+                throw new KeyNotFoundException($"Nie znaleziono dermatologa o ID {consultation.DermatologistId}");
+            }
+
+            _context.Consultations.Add(consultation);
+            await _context.SaveChangesAsync();
+
+            return consultation;
         }
+
 
         public async Task<Consultation> UpdateAsync(Consultation consultation)
         {
