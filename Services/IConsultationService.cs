@@ -11,7 +11,6 @@ namespace DermatologyApi.Services
         Task<ConsultationDto> CreateConsultationAsync(ConsultationCreateDto consultationDto);
         Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion);
         Task DeleteConsultationAsync(int id);
-        Task TransferConsultationsAsync(TransferRequest[] transfers);
     }
 
     public class PagedResult<T>
@@ -21,11 +20,5 @@ namespace DermatologyApi.Services
         public int PageCount { get; set; }
         public int CurrentPage { get; set; }
         public int PageSize { get; set; }
-    }
-
-    public class TransferRequest
-    {
-        public int ConsultationId { get; set; }
-        public DateTime NewDateTime { get; set; }
     }
 }

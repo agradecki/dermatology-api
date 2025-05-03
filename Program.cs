@@ -37,6 +37,7 @@ builder.Services.AddScoped<IDermatologistService, DermatologistService>();
 builder.Services.AddScoped<ILesionService, LesionService>();
 builder.Services.AddScoped<IDiagnosisService, DiagnosisService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
+builder.Services.AddScoped<ITransferService, TransferService>();
 
 // Configure Swagger
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -16,6 +16,7 @@ namespace DermatologyApi.Data
         public DbSet<Lesion> Lesions { get; set; }
         public DbSet<Diagnosis> Diagnoses {  get; set; }
         public DbSet<Consultation> Consultations {  get; set; }
+        public DbSet<Transfer> Transfers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -109,49 +109,28 @@ namespace DermatologyApi.Data.Repositories
             return true;
         }
 
-        public async Task<bool> TransferConsultationsAsync(List<Transfer> transfers)
-        {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
-            {
-                try
-                {
-                    foreach (var transfer in transfers)
-                    {
-                        var consultation = await _context.Consultations.FindAsync(transfer.ConsultationId);
-                        if (consultation == null)
-                        {
-                            throw new KeyNotFoundException($"Nie znaleziono konsultacji o ID {transfer.ConsultationId}");
-                        }
-
-                        consultation.ConsultationDate = transfer.NewDateTime;
-                        _context.Entry(consultation).State = EntityState.Modified;
-                    }
-
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
-                    return true;
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-            }
-        }
-
         public async Task<bool> IsTimeSlotAvailableAsync(int dermatologistId, DateTime consultationDate, int? consultationId = null)
         {
-            var startOfDay = consultationDate.Date;
-            var endOfDay = consultationDate.Date.AddDays(1).AddTicks(-1);
+            var workDayStart = consultationDate.Date.AddHours(8);
+            var workDayEnd = consultationDate.Date.AddHours(16);
 
-            var existingConsultation = await _context.Consultations
+            if (consultationDate < workDayStart || consultationDate >= workDayEnd)
+            {
+                return false;
+            }
+
+            var consultationEnd = consultationDate.AddHours(1);
+
+            var overlappingConsultation = await _context.Consultations
                 .Where(c => c.DermatologistId == dermatologistId &&
-                            c.ConsultationDate >= startOfDay && c.ConsultationDate <= endOfDay &&
-                            (consultationId == null || c.Id != consultationId))
+                            (consultationId == null || c.Id != consultationId) &&
+                            c.ConsultationDate < consultationEnd &&
+                            c.ConsultationDate.AddHours(1) > consultationDate)
                 .FirstOrDefaultAsync();
 
-            return existingConsultation == null;
+            return overlappingConsultation == null;
         }
+
 
         public async Task<(IEnumerable<Consultation> Consultations, int TotalCount)> GetPagedAsync(int page, int size)
         {
