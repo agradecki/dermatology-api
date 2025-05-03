@@ -1,5 +1,6 @@
 ﻿using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
+using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,9 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(id);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {id} not found");
+            }
 
             return patient;
         }
@@ -38,13 +41,21 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(id);
             if (patient == null)
-                return null;
+            {
+                 throw new NotFoundException($"Patient with ID {id} not found");
+            }
 
             return PatientMapper.MapToDto(patient);
         }
 
         public async Task<PatientDto> CreatePatientAsync(PatientCreateDto patientDto)
         {
+            var existingPatients = await _patientRepository.GetAllAsync();
+            if (existingPatients.Any(p => p.Email.Equals(patientDto.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ConflictException($"Email {patientDto.Email} is already in use");
+            }
+
             var patient = new Patient
             {
                 FirstName = patientDto.FirstName,
@@ -63,10 +74,20 @@ namespace DermatologyApi.Services
         {
             var existingPatient = await _patientRepository.GetByIdAsync(id);
             if (existingPatient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {id} not found");
+            }
 
             if (!existingPatient.RowVersion.SequenceEqual(rowVersion))
-                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+            {
+                throw new PreconditionFailedException("The patient has been modified since it was last retrieved");
+            }
+
+            var existingPatients = await _patientRepository.GetAllAsync();
+            if (existingPatients.Any(p => p.Id != id && p.Email.Equals(patientDto.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ConflictException($"Email {patientDto.Email} is already in use by another patient");
+            }
 
             existingPatient.FirstName = patientDto.FirstName;
             existingPatient.LastName = patientDto.LastName;
@@ -75,18 +96,37 @@ namespace DermatologyApi.Services
             existingPatient.Email = patientDto.Email;
             existingPatient.Address = patientDto.Address;
 
-            var updatedPatient = await _patientRepository.UpdateAsync(existingPatient);
-            if (updatedPatient == null)
-                return null;
-
-            return PatientMapper.MapToDto(updatedPatient);
+            try
+            {
+                var updatedPatient = await _patientRepository.UpdateAsync(existingPatient);
+                return PatientMapper.MapToDto(updatedPatient);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The patient has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update patient: {ex.Message}");
+            }
         }
 
         public async Task<PatientDto> PatchPatientAsync(int id, PatientPatchDto patientDto)
         {
             var existingPatient = await _patientRepository.GetByIdAsync(id);
             if (existingPatient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {id} not found");
+            }
+
+            if (patientDto.Email != null && !existingPatient.Email.Equals(patientDto.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingPatients = await _patientRepository.GetAllAsync();
+                if (existingPatients.Any(p => p.Id != id && p.Email.Equals(patientDto.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new ConflictException($"Email {patientDto.Email} is already in use by another patient");
+                }
+            }
 
             if (patientDto.FirstName != null)
                 existingPatient.FirstName = patientDto.FirstName;
@@ -106,18 +146,28 @@ namespace DermatologyApi.Services
             if (patientDto.Address != null)
                 existingPatient.Address = patientDto.Address;
 
-            var updatedPatient = await _patientRepository.PatchAsync(existingPatient);
-            if (updatedPatient == null)
-                return null;
-
-            return PatientMapper.MapToDto(updatedPatient);
+            try 
+            {
+                var updatedPatient = await _patientRepository.PatchAsync(existingPatient);
+                return PatientMapper.MapToDto(updatedPatient);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The patient has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update patient: {ex.Message}");
+            }
         }
 
         public async Task<IEnumerable<DiagnosisDto>> GetPatientDiagnosesAsync(int patientId)
         {
             var patient = await _patientRepository.GetByIdAsync(patientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {patientId} not found");
+            }
 
             var diagnoses = await _diagnosisRepository.GetByPatientIdAsync(patientId);
             return diagnoses.Select(DiagnosisMapper.MapToDto);
@@ -127,7 +177,9 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(patientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {patientId} not found");
+            }
 
             var consultations = await _consultationRepository.GetByPatientIdAsync(patientId);
             return consultations.Select(ConsultationMapper.MapToDto);
@@ -135,7 +187,19 @@ namespace DermatologyApi.Services
 
         public async Task<bool> DeletePatientAsync(int id)
         {
-            return await _patientRepository.DeleteAsync(id);
+            var patient = await _patientRepository.GetByIdAsync(id);
+            if (patient == null)
+            {
+                throw new NotFoundException($"Patient with ID {id} not found");
+            }
+
+            var result = await _patientRepository.DeleteAsync(id);
+            if (!result)
+            {
+                throw new ConflictException($"Unable to delete patient with ID {id}");
+            }
+
+            return true;
         }
     }
 }

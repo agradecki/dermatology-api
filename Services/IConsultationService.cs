@@ -10,7 +10,7 @@ namespace DermatologyApi.Services
         Task<ConsultationDto> GetConsultationByIdAsync(int id);
         Task<ConsultationDto> CreateConsultationAsync(ConsultationCreateDto consultationDto);
         Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion);
-        Task DeleteConsultationAsync(int id);
+        Task<bool> DeleteConsultationAsync(int id);
     }
 
     public class PagedResult<T>

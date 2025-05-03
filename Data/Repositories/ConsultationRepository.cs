@@ -64,13 +64,13 @@ namespace DermatologyApi.Data.Repositories
             var patient = await _context.Patients.FindAsync(consultation.PatientId);
             if (patient == null)
             {
-                throw new KeyNotFoundException($"Nie znaleziono pacjenta o ID {consultation.PatientId}");
+                throw new KeyNotFoundException($"Patient with ID {consultation.PatientId} not found.");
             }
 
             var dermatologist = await _context.Dermatologists.FindAsync(consultation.DermatologistId);
             if (dermatologist == null)
             {
-                throw new KeyNotFoundException($"Nie znaleziono dermatologa o ID {consultation.DermatologistId}");
+                throw new KeyNotFoundException($"Dermatologist with ID {consultation.DermatologistId} not found.");
             }
 
             _context.Consultations.Add(consultation);
@@ -83,18 +83,7 @@ namespace DermatologyApi.Data.Repositories
         public async Task<Consultation> UpdateAsync(Consultation consultation)
         {
             _context.Entry(consultation).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await ConsultationExists(consultation.Id))
-                {
-                    return null;
-                }
-                throw;
-            }
+            await _context.SaveChangesAsync();
             return consultation;
         }
 
@@ -148,11 +137,6 @@ namespace DermatologyApi.Data.Repositories
                 .ToListAsync();
 
             return (consultations, totalCount);
-        }
-
-        private async Task<bool> ConsultationExists(int id)
-        {
-            return await _context.Consultations.AnyAsync(e => e.Id == id);
         }
     }
 }

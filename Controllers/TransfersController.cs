@@ -17,19 +17,8 @@ namespace DermatologyApi.Controllers
         [HttpPost("transfers")]
         public async Task<ActionResult> TransferConsultations(TransferRequest[] transfers)
         {
-            try
-            {
-                await _transferService.TransferConsultationsAsync(transfers);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
+            await _transferService.TransferConsultationsAsync(transfers);
+            return NoContent();
         }
     }
 }

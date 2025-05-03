@@ -47,7 +47,7 @@ namespace DermatologyApi.Data.Repositories
             var exists = await DiagnosisExistsAsync(diagnosis.PatientId, diagnosis.DermatologistId, diagnosis.DiagnosisDate);
             if (exists)
             {
-                throw new InvalidOperationException("Diagnoza dla tego pacjenta, dermatologa i daty już istnieje.");
+                throw new InvalidOperationException("The diagnosis for this patient, dermatologist and date already exists.");
             }
 
             _context.Diagnoses.Add(diagnosis);
@@ -58,18 +58,7 @@ namespace DermatologyApi.Data.Repositories
         public async Task<Diagnosis> UpdateAsync(Diagnosis diagnosis)
         {
             _context.Entry(diagnosis).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await DiagnosisExists(diagnosis.Id))
-                {
-                    return null;
-                }
-                throw;
-            }
+            await _context.SaveChangesAsync();
             return diagnosis;
         }
 
@@ -90,11 +79,6 @@ namespace DermatologyApi.Data.Repositories
                 d.PatientId == patientId &&
                 d.DermatologistId == dermatologistId &&
                 d.DiagnosisDate.Date == date.Date);
-        }
-
-        private async Task<bool> DiagnosisExists(int id)
-        {
-            return await _context.Diagnoses.AnyAsync(e => e.Id == id);
         }
     }
 }

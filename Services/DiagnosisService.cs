@@ -1,5 +1,6 @@
 ﻿using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
+using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +30,9 @@ namespace DermatologyApi.Services
         {
             var diagnosis = await _diagnosisRepository.GetByIdAsync(id);
             if (diagnosis == null)
-                return null;
+            {
+                throw new NotFoundException($"Diagnosis with ID {id} not found");
+            }
 
             return diagnosis;
         }
@@ -44,7 +47,9 @@ namespace DermatologyApi.Services
         {
             var diagnosis = await _diagnosisRepository.GetByIdAsync(id);
             if (diagnosis == null)
-                return null;
+            {
+                throw new NotFoundException($"Diagnosis with ID {id} not found");
+            }
 
             return DiagnosisMapper.MapToDto(diagnosis);
         }
@@ -53,17 +58,23 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(diagnosisDto.PatientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {diagnosisDto.PatientId} not found");
+            }
 
             var dermatologist = await _dermatologistRepository.GetByIdAsync(diagnosisDto.DermatologistId);
             if (dermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with ID {diagnosisDto.DermatologistId} not found");
+            }
 
             if (diagnosisDto.LesionId > 0)
             {
                 var lesion = await _lesionRepository.GetByIdAsync(diagnosisDto.LesionId);
                 if (lesion == null)
-                    return null;
+                {
+                    throw new NotFoundException($"Lesion with ID {diagnosisDto.LesionId} not found");
+                }
             }
 
             var diagnosis = new Diagnosis
@@ -83,25 +94,35 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(diagnosisDto.PatientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {diagnosisDto.PatientId} not found");
+            }
 
             var dermatologist = await _dermatologistRepository.GetByIdAsync(diagnosisDto.DermatologistId);
             if (dermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with ID {diagnosisDto.DermatologistId} not found");
+            }
 
             if (diagnosisDto.LesionId > 0)
             {
                 var lesion = await _lesionRepository.GetByIdAsync(diagnosisDto.LesionId);
                 if (lesion == null)
-                    return null;
+                {
+                    throw new NotFoundException($"Lesion with ID {diagnosisDto.LesionId} not found");
+                }
             }
 
             var existingDiagnosis = await _diagnosisRepository.GetByIdAsync(id);
             if (existingDiagnosis == null)
-                return null;
+            {
+                throw new NotFoundException($"Diagnosis with ID {id} not found");
+            }
 
             if (!existingDiagnosis.RowVersion.SequenceEqual(rowVersion))
-                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+            {
+                throw new PreconditionFailedException("The diagnosis has been modified since it was last retrieved");
+            }
 
             existingDiagnosis.PatientId = diagnosisDto.PatientId;
             existingDiagnosis.DermatologistId = diagnosisDto.DermatologistId;
@@ -109,16 +130,36 @@ namespace DermatologyApi.Services
             existingDiagnosis.DiagnosisDate = diagnosisDto.DiagnosisDate;
             existingDiagnosis.Description = diagnosisDto.Description;
 
-            var updatedDiagnosis = await _diagnosisRepository.UpdateAsync(existingDiagnosis);
-            if (updatedDiagnosis == null)
-                return null;
-
-            return DiagnosisMapper.MapToDto(updatedDiagnosis);
+            try
+            {
+                var updatedDiagnosis = await _diagnosisRepository.UpdateAsync(existingDiagnosis);
+                return DiagnosisMapper.MapToDto(updatedDiagnosis);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The diagnosis has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update diagnosis: {ex.Message}");
+            }
         }
 
         public async Task<bool> DeleteDiagnosisAsync(int id)
         {
-            return await _diagnosisRepository.DeleteAsync(id);
+            var diagnosis = await _diagnosisRepository.GetByIdAsync(id);
+            if (diagnosis == null)
+            {
+                throw new NotFoundException($"Diagnosis with ID {id} not found");
+            }
+
+            var result = await _diagnosisRepository.DeleteAsync(id);
+            if (!result)
+            {
+                throw new ConflictException($"Unable to delete diagnosis with ID {id}");
+            }
+
+            return true;
         }
     }
 }

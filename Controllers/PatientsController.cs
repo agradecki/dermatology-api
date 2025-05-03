@@ -3,6 +3,8 @@ using DermatologyApi.Mappers;
 using DermatologyApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using DermatologyApi.Exceptions;
 
 namespace DermatologyApi.Controllers
 {
@@ -27,24 +29,15 @@ namespace DermatologyApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PatientDto>> GetPatientById(int id)
         {
-            try 
-            {
-                var patient = await _patientService.GetPatientEntityByIdAsync(id);
-                if (patient == null)
-                    return NotFound();
+            var patient = await _patientService.GetPatientEntityByIdAsync(id);
 
-                var etag = Convert.ToBase64String(patient.RowVersion);
-                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
-                if (etag == ifNoneMatch)
-                    return StatusCode(304);
+            var etag = Convert.ToBase64String(patient.RowVersion);
+            var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+            if (etag == ifNoneMatch)
+                return StatusCode(304);
 
-                Response.Headers["ETag"] = etag;
-                return Ok(PatientMapper.MapToDto(patient));
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
+            Response.Headers["ETag"] = etag;
+            return Ok(PatientMapper.MapToDto(patient));
         }
 
         [HttpPost]
@@ -57,100 +50,56 @@ namespace DermatologyApi.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<PatientDto>> UpdatePatient(int id, PatientUpdateDto patientDto)
         {
-            try
+            var etagBase64 = Request.Headers["If-Match"].ToString();
+            if (string.IsNullOrEmpty(etagBase64))
             {
-                var etagBase64 = Request.Headers["If-Match"].ToString();
-                if (string.IsNullOrEmpty(etagBase64))
-                    return BadRequest("ETag header is required.");
-
-                byte[] etag = Convert.FromBase64String(etagBase64);
-
-                var patient = await _patientService.UpdatePatientAsync(id, patientDto, etag);
-                var updatedPatient = await _patientService.GetPatientEntityByIdAsync(id);
-                var newEtag = Convert.ToBase64String(updatedPatient.RowVersion);
-
-                Response.Headers.Add("ETag", newEtag);
-
-                return Ok(patient);
+                throw new ValidationException("ETag header is required.");
             }
-            catch (KeyNotFoundException ex)
+
+            var patient = await _patientService.GetPatientEntityByIdAsync(id);
+            var etag = Convert.ToBase64String(patient.RowVersion);
+
+            if (etagBase64 != etag)
             {
-                return NotFound(ex);
+                throw new PreconditionFailedException("Precondition failed: The resource has been modified by anther user.");
             }
-            catch(DbUpdateConcurrencyException)
-            {
-                return StatusCode(412, "Precondition failed: The resource has been modified by another user");
-            }
+
+            var updatedPatient = await _patientService.UpdatePatientAsync(id, patientDto, Convert.FromBase64String(etag));
+
+            patient = await _patientService.GetPatientEntityByIdAsync(id);
+            etag = Convert.ToBase64String(patient.RowVersion);
+
+            Response.Headers["ETag"] = etag;
+
+            return Ok(updatedPatient);
         }
 
         [HttpPatch("{id}")]
         public async Task<ActionResult<PatientDto>> PatchPatient(int id, PatientPatchDto patientDto)
         {
-            try
-            {
-                var patient = await _patientService.PatchPatientAsync(id, patientDto);
-                return Ok(patient);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex);
-            }
+            var patient = await _patientService.PatchPatientAsync(id, patientDto);
+            return Ok(patient);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletePatient(int id)
         {
-            try
-            {
-                await _patientService.DeletePatientAsync(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex) 
-            {
-                return NotFound(ex.Message);
-            }
+            await _patientService.DeletePatientAsync(id);
+            return NoContent();
         }
 
         [HttpGet("{pid}/diagnoses")]
         public async Task<ActionResult<IEnumerable<DiagnosisDto>>> GetPatientDiagnoses(int pid)
         {
-            try
-            {
-                var diagnoses = await _patientService.GetPatientDiagnosesAsync(pid);
-                if (diagnoses == null || !diagnoses.Any())
-                    return NotFound($"No diagnoses found for patient with ID {pid}.");
-
-                return Ok(diagnoses);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Patient with ID {pid} not found.");
-            }
-            catch (Exception ex) 
-            {
-                return StatusCode(500, $"An error occurred {ex.Message}");
-            }
+            var diagnoses = await _patientService.GetPatientDiagnosesAsync(pid);
+            return Ok(diagnoses);
         }
 
         [HttpGet("{pid}/consultations")]
         public async Task<ActionResult<IEnumerable<ConsultationDto>>> GetPatientConsultations(int pid)
         {
-            try
-            {
-                var consultations = await _patientService.GetPatientConsultationsAsync(pid);
-                if (consultations == null || !consultations.Any())
-                    return NotFound($"No consultation found for patient with ID {pid}.");
-
-                return Ok(consultations);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound($"Patient with ID {pid} not found.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred {ex.Message}");
-            }
+            var consultations = await _patientService.GetPatientConsultationsAsync(pid);
+            return Ok(consultations);
         }
     }
 }

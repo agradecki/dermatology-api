@@ -1,6 +1,7 @@
 ﻿using DermatologyApi.Data;
 using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
+using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -24,7 +25,9 @@ namespace DermatologyApi.Services
         {
             var consultation = await _consultationRepository.GetByIdAsync(id);
             if (consultation == null)
-                return null;
+            {
+                throw new NotFoundException($"Consultation with ID {id} not found.");
+            }
 
             return consultation;
         }
@@ -49,7 +52,9 @@ namespace DermatologyApi.Services
         {
             var consultation = await _consultationRepository.GetByIdAsync(id);
             if (consultation == null)
-                return null;
+            {
+                throw new NotFoundException($"Consultation with ID {id} not found.");
+            }
 
             return ConsultationMapper.MapToDto(consultation);
         }
@@ -58,11 +63,15 @@ namespace DermatologyApi.Services
         {
             var patient = await _patientRepository.GetByIdAsync(consultationDto.PatientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with ID {consultationDto.PatientId} not found.");
+            }
 
             var dermatologist = await _dermatologistRepository.GetByIdAsync(consultationDto.DermatologistId);
             if (dermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with ID {consultationDto.DermatologistId} not found.");
+            }
 
             if (!await _consultationRepository.IsTimeSlotAvailableAsync(
                 consultationDto.DermatologistId, consultationDto.ConsultationDate))
@@ -80,7 +89,6 @@ namespace DermatologyApi.Services
             };
 
             var createdConsultation = await _consultationRepository.CreateAsync(consultation);
-
             return ConsultationMapper.MapToDto(createdConsultation);
         }
 
@@ -88,24 +96,47 @@ namespace DermatologyApi.Services
         {
             var existingConsultation = await _consultationRepository.GetByIdAsync(id);
             if (existingConsultation == null)
+            {
                 throw new KeyNotFoundException($"Consultation with ID {id} not found");
+            }
 
             if (!existingConsultation.RowVersion.SequenceEqual(rowVersion))
-                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+            {
+                throw new PreconditionFailedException("The consultation has been modified since it was last retrieved");
+            }
 
             ConsultationMapper.MapFromUpdateDto(consultationDto, existingConsultation);
 
-            var consultation = await _consultationRepository.UpdateAsync(existingConsultation);
-            return ConsultationMapper.MapToDto(consultation);
+            try
+            {
+                var consultation = await _consultationRepository.UpdateAsync(existingConsultation);
+                return ConsultationMapper.MapToDto(consultation);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The consultation has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update consultation: {ex.Message}");
+            }
         }
 
-        public async Task DeleteConsultationAsync(int id)
+        public async Task<bool> DeleteConsultationAsync(int id)
         {
             var consultation = await _consultationRepository.GetByIdAsync(id);
             if (consultation == null)
+            {
                 throw new KeyNotFoundException($"Consultation with ID {id} not found");
+            }
 
-            await _consultationRepository.DeleteAsync(consultation.Id);
+            var result = await _consultationRepository.DeleteAsync(consultation.Id);
+            if (!result)
+            {
+                throw new ConflictException($"Unable to delete consultation with ID {id}");
+            }
+
+            return true;
         }
     }
 }

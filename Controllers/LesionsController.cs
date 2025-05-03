@@ -4,6 +4,8 @@ using DermatologyApi.Services;
 using DermatologyAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using DermatologyApi.Exceptions;
 
 namespace DermatologyApi.Controllers
 {
@@ -28,24 +30,17 @@ namespace DermatologyApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<LesionDto>> GetLesionById(int id)
         {
-            try
-            {
-                var lesion = await _lesionService.GetLesionEntityByIdAsync(id);
-                if (lesion == null)
-                    return NotFound();
+            var lesion = await _lesionService.GetLesionEntityByIdAsync(id);
+            if (lesion == null)
+                return NotFound();
 
-                var etag = Convert.ToBase64String(lesion.RowVersion);
-                var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
-                if (etag == ifNoneMatch)
-                    return StatusCode(304);
+            var etag = Convert.ToBase64String(lesion.RowVersion);
+            var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
+            if (etag == ifNoneMatch)
+                return StatusCode(304);
 
-                Response.Headers["ETag"] = etag;
-                return Ok(LesionMapper.MapToDto(lesion));
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            Response.Headers["ETag"] = etag;
+            return Ok(LesionMapper.MapToDto(lesion));
         }
 
         [HttpPost]
@@ -58,58 +53,41 @@ namespace DermatologyApi.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<LesionDto>> UpdateLesion(int id, LesionUpdateDto lesionDto)
         {
-            try
+            var etagBase64 = Request.Headers["If-Match"].ToString();
+            if (string.IsNullOrEmpty(etagBase64))
             {
-                var etagBase64 = Request.Headers["If-Match"].ToString();
-                if (string.IsNullOrEmpty(etagBase64))
-                    return BadRequest("ETag header is required");
-
-                byte[] etag = Convert.FromBase64String(etagBase64);
-
-                var lesion = await _lesionService.UpdateLesionAsync(id, lesionDto, etag);
-
-                var updatedLesion = await _lesionService.GetLesionEntityByIdAsync(id);
-                var newEtag = Convert.ToBase64String(updatedLesion.RowVersion);
-
-                Response.Headers.Add("ETag", newEtag);
-                return Ok(lesion);
+                throw new ValidationException("ETag header is required.");
             }
-            catch (KeyNotFoundException ex)
+
+            var lesion = await _lesionService.GetLesionEntityByIdAsync(id);
+            var etag = Convert.ToBase64String(lesion.RowVersion);
+
+            if (etagBase64 != etag)
             {
-                return NotFound(ex.Message);
+                throw new PreconditionFailedException("Precondition failed: The resource has been modified by anther user.");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                return StatusCode(412, "Precondition failed: The resource has been modified by another user");
-            }
+
+            var updatedLesion = await _lesionService.UpdateLesionAsync(id, lesionDto, Convert.FromBase64String(etag));
+
+            lesion = await _lesionService.GetLesionEntityByIdAsync(id);
+            etag = Convert.ToBase64String(lesion.RowVersion);
+
+            Response.Headers["ETag"] = etag;
+            return Ok(updatedLesion);
         }
 
         [HttpPatch("{id}")]
         public async Task<ActionResult<LesionDto>> PatchLesion(int id, LesionPatchDto lesionDto)
         {
-            try
-            {
-                var lesion = await _lesionService.PatchLesionAsync(id, lesionDto);
-                return Ok(lesion);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var lesion = await _lesionService.PatchLesionAsync(id, lesionDto);
+            return Ok(lesion);
         }
 
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteLesion(int id)
         {
-            try
-            {
-                await _lesionService.DeleteLesionAsync(id);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            await _lesionService.DeleteLesionAsync(id);
+            return NoContent();
         }
     }
 }

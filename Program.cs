@@ -1,6 +1,7 @@
 using DermatologyApi.Data;
 using DermatologyApi.Data.Repositories;
 using DermatologyApi.Filters;
+using DermatologyApi.Middleware;
 using DermatologyApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -67,6 +68,8 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty;
     });
 }
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

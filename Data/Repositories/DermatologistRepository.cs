@@ -32,36 +32,14 @@ namespace DermatologyApi.Data.Repositories
         public async Task<Dermatologist> UpdateAsync(Dermatologist dermatologist)
         {
             _context.Entry(dermatologist).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await DermatologistExists(dermatologist.Id))
-                {
-                    return null;
-                }
-                throw;
-            }
+            await _context.SaveChangesAsync();
             return dermatologist;
         }
 
         public async Task<Dermatologist> PatchAsync(Dermatologist dermatologist)
         {
             _context.Entry(dermatologist).State = EntityState.Modified;
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await DermatologistExists(dermatologist.Id))
-                {
-                    return null;
-                }
-                throw;
-            }
+            await _context.SaveChangesAsync();
             return dermatologist;
         }
 
@@ -76,11 +54,6 @@ namespace DermatologyApi.Data.Repositories
             _context.Dermatologists.Remove(dermatologist);
             await _context.SaveChangesAsync();
             return true;
-        }
-
-        private async Task<bool> DermatologistExists(int id)
-        {
-            return await _context.Dermatologists.AnyAsync(e => e.Id == id);
         }
     }
 }

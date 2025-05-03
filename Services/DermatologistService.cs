@@ -1,8 +1,10 @@
 ﻿using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
+using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace DermatologyApi.Services
 {
@@ -23,7 +25,9 @@ namespace DermatologyApi.Services
         {
             var dermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (dermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with id {id} not found.");
+            }
 
             return dermatologist;
         }
@@ -38,7 +42,9 @@ namespace DermatologyApi.Services
         {
             var dermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (dermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with id {id} not found.");
+            }
 
             return DermatologistMapper.MapToDto(dermatologist);
         }
@@ -63,10 +69,14 @@ namespace DermatologyApi.Services
         {
             var existingDermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (existingDermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with id {id} not found.");
+            }
 
             if (!existingDermatologist.RowVersion.SequenceEqual(rowVersion))
-                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+            {
+                throw new PreconditionFailedException("The dermatologist has been modified since it was last retrieved");
+            }
 
             existingDermatologist.FirstName = dermatologistDto.FirstName;
             existingDermatologist.LastName = dermatologistDto.LastName;
@@ -75,18 +85,28 @@ namespace DermatologyApi.Services
             existingDermatologist.Email = dermatologistDto.Email;
             existingDermatologist.PhoneNumber = dermatologistDto.PhoneNumber;
 
-            var updatedDermatologist = await _dermatologistRepository.UpdateAsync(existingDermatologist);
-            if (updatedDermatologist == null)
-                return null;
-
-            return DermatologistMapper.MapToDto(updatedDermatologist);
+            try
+            {
+                var updatedDermatologist = await _dermatologistRepository.UpdateAsync(existingDermatologist);
+                return DermatologistMapper.MapToDto(updatedDermatologist);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The dermatologist has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update dermatologist: {ex.Message}");
+            }
         }
 
         public async Task<DermatologistDto> PatchDermatologistAsync(int id, DermatologistPatchDto dermatologistDto)
         {
             var existingDermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (existingDermatologist == null)
-                return null;
+            {
+                throw new NotFoundException($"Dermatologist with id {id} not found.");
+            }
 
             if (dermatologistDto.FirstName != null)
                 existingDermatologist.FirstName = dermatologistDto.FirstName;
@@ -106,23 +126,46 @@ namespace DermatologyApi.Services
             if (dermatologistDto.PhoneNumber != null)
                 existingDermatologist.PhoneNumber = dermatologistDto.PhoneNumber;
 
-            var updatedDermatologist = await _dermatologistRepository.PatchAsync(existingDermatologist);
-            if (updatedDermatologist == null)
-                return null;
-
-            return DermatologistMapper.MapToDto(updatedDermatologist);
+            try
+            {
+                var updatedDermatologist = await _dermatologistRepository.PatchAsync(existingDermatologist);
+                return DermatologistMapper.MapToDto(updatedDermatologist);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The dermatologist has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update dermatologist: {ex.Message}");
+            }
         }
 
         public async Task<bool> DeleteDermatologistAsync(int id)
         {
-            return await _dermatologistRepository.DeleteAsync(id);
+            var dermatologist = await _dermatologistRepository.GetByIdAsync(id);
+            if (dermatologist == null)
+            {
+                throw new NotFoundException($"Dermatologist with ID {id} not found");
+            }
+
+            var result = await _dermatologistRepository.DeleteAsync(id);
+            if (!result)
+            {
+                throw new ConflictException($"Unable to delete dermatologist with ID {id}");
+            }
+
+            return true;
         }
 
         public async Task<IEnumerable<DiagnosisDto>> GetDermatologistDiagnosesAsync(int dermatologistId)
         {
             var dermatologist = await _dermatologistRepository.GetByIdAsync(dermatologistId);
             if (dermatologist == null)
-                return null;
+                if (dermatologist == null)
+                {
+                    throw new NotFoundException($"Dermatologist with ID {dermatologistId} not found");
+                }
 
             var diagnoses = await _diagnosisRepository.GetByDermatologistIdAsync(dermatologistId);
             return diagnoses.Select(DiagnosisMapper.MapToDto);
@@ -132,7 +175,10 @@ namespace DermatologyApi.Services
         {
             var dermatologist = await _dermatologistRepository.GetByIdAsync(dermatologistId);
             if (dermatologist == null)
-                return null;
+                if (dermatologist == null)
+                {
+                    throw new NotFoundException($"Dermatologist with ID {dermatologistId} not found");
+                }
 
             var consultations = await _consultationRepository.GetByDermatologistIdAsync(dermatologistId);
             return consultations.Select(ConsultationMapper.MapToDto);

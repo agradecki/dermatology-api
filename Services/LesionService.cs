@@ -1,5 +1,6 @@
 ﻿using DermatologyApi.Data.Repositories;
 using DermatologyApi.DTOs;
+using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,19 +10,21 @@ namespace DermatologyApi.Services
     public class LesionService : ILesionService
     {
         private readonly ILesionRepository _lesionRepository;
-        private readonly IPatientRepository _petientRepository;
+        private readonly IPatientRepository _patientRepository;
 
         public LesionService(ILesionRepository lesionRepository, IPatientRepository petientRepository)
         {
             _lesionRepository = lesionRepository;
-            _petientRepository = petientRepository;
+            _patientRepository = petientRepository;
         }
 
         public async Task<Lesion> GetLesionEntityByIdAsync(int id)
         {
             var lesion = await _lesionRepository.GetByIdAsync(id);
             if (lesion == null)
-                return null;
+            {
+                throw new NotFoundException($"Lesion with id {id} not found.");
+            }
 
             return lesion;
         }
@@ -36,16 +39,20 @@ namespace DermatologyApi.Services
         {
             var lesion = await _lesionRepository.GetByIdAsync(id);
             if (lesion == null)
-                return null;
+            {
+                throw new NotFoundException($"Lesion with id {id} not found.");
+            }
 
             return LesionMapper.MapToDto(lesion);
         }
 
         public async Task<LesionDto> CreateLesionAsync(LesionCreateDto lesionDto)
         {
-            var patient = await _petientRepository.GetByIdAsync(lesionDto.PatientId);
+            var patient = await _patientRepository.GetByIdAsync(lesionDto.PatientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with id {lesionDto.PatientId} not found.");
+            }
 
             var lesion = new Lesion
             {
@@ -62,40 +69,59 @@ namespace DermatologyApi.Services
 
         public async Task<LesionDto> UpdateLesionAsync(int id, LesionUpdateDto lesionDto, byte[] rowVersion)
         {
-            var patient = await _petientRepository.GetByIdAsync(lesionDto.PatientId);
+            var patient = await _patientRepository.GetByIdAsync(lesionDto.PatientId);
             if (patient == null)
-                return null;
+            {
+                throw new NotFoundException($"Patient with id {lesionDto.PatientId} not found.");
+            }
 
             var existingLesion = await _lesionRepository.GetByIdAsync(id);
             if (existingLesion == null)
-                return null;
+            {
+                throw new NotFoundException($"Lesion with id {id} not found.");
+            }
 
             if (!existingLesion.RowVersion.SequenceEqual(rowVersion))
-                throw new DbUpdateConcurrencyException("ETag does not match. Resource was modified.");
+            {
+                throw new PreconditionFailedException("The lesion has been modified since it was last retrieved");
+            }
 
             existingLesion.PatientId = lesionDto.PatientId;
             existingLesion.Location = lesionDto.Location;
             existingLesion.DiscoveryDate = lesionDto.DiscoveryDate;
             existingLesion.Description = lesionDto.Description;
 
-            var updatedLesion = await _lesionRepository.UpdateAsync(existingLesion);
-            if (updatedLesion == null)
-                return null;
+            try
+            {
+                var updatedLesion = await _lesionRepository.UpdateAsync(existingLesion);
+                return LesionMapper.MapToDto(updatedLesion);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The lesion has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update lesion: {ex.Message}");
+            }
 
-            return LesionMapper.MapToDto(updatedLesion);
         }
 
         public async Task<LesionDto> PatchLesionAsync(int id, LesionPatchDto lesionDto)
         {
             var existingLesion = await _lesionRepository.GetByIdAsync(id);
             if (existingLesion == null)
-                return null;
+            {
+                throw new NotFoundException($"Lesion with id {id} not found.");
+            }
 
             if (lesionDto.PatientId.HasValue)
             {
-                var patient = await _petientRepository.GetByIdAsync(lesionDto.PatientId.Value);
+                var patient = await _patientRepository.GetByIdAsync(lesionDto.PatientId.Value);
                 if (patient == null)
-                    return null;
+            {
+                throw new NotFoundException($"Patient with ID {id} not found");
+            }
 
                 existingLesion.PatientId = lesionDto.PatientId.Value;
             }
@@ -109,16 +135,36 @@ namespace DermatologyApi.Services
             if (lesionDto.Description != null)
                 existingLesion.Description = lesionDto.Description;
 
-            var updatedLesion = await _lesionRepository.PatchAsync(existingLesion);
-            if (updatedLesion == null)
-                return null;
-
-            return LesionMapper.MapToDto(updatedLesion);
+            try
+            {
+                var updatedLesion = await _lesionRepository.PatchAsync(existingLesion);
+                return LesionMapper.MapToDto(updatedLesion);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw new PreconditionFailedException("The lesion has been modified since it was last retrieved");
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new ConflictException($"Unable to update lesion: {ex.Message}");
+            }
         }
 
         public async Task<bool> DeleteLesionAsync(int id)
         {
-            return await _lesionRepository.DeleteAsync(id);
+            var lesion = await _lesionRepository.GetByIdAsync(id);
+            if (lesion == null)
+            {
+                throw new NotFoundException($"Lesion with ID {id} not found");
+            }
+
+            var result = await _lesionRepository.DeleteAsync(id);
+            if (!result)
+            {
+                throw new ConflictException($"Unable to delete lesion with ID {id}");
+            }
+
+            return true;
         }
     }
 }

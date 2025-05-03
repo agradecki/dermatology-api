@@ -10,6 +10,5 @@ namespace DermatologyApi.Data.Repositories
         Task<Patient> UpdateAsync(Patient patient);
         Task<Patient> PatchAsync(Patient patient);
         Task<bool> DeleteAsync(int id);
-
     }
 }
