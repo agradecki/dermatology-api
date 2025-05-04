@@ -79,14 +79,9 @@ namespace DermatologyApi.Services
                 throw new InvalidOperationException("The selected time slot is not available");
             }
 
-            var consultation = new Consultation {
-                PatientId = consultationDto.PatientId,
-                DermatologistId = consultationDto.DermatologistId,
-                ConsultationDate = consultationDto.ConsultationDate,
-                Description = consultationDto.Description,
-                Patient = patient,
-                Dermatologist = dermatologist
-            };
+            var consultation = ConsultationMapper.MapFromCreateDto(consultationDto);
+            consultation.Patient = patient;
+            consultation.Dermatologist = dermatologist;
 
             var createdConsultation = await _consultationRepository.CreateAsync(consultation);
             return ConsultationMapper.MapToDto(createdConsultation);
@@ -105,7 +100,7 @@ namespace DermatologyApi.Services
                 throw new PreconditionFailedException("The consultation has been modified since it was last retrieved");
             }
 
-            ConsultationMapper.MapFromUpdateDto(consultationDto, existingConsultation);
+            ConsultationMapper.MapFromUpdateDto(existingConsultation, consultationDto);
 
             try
             {

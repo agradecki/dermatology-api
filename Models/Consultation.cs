@@ -17,8 +17,6 @@ namespace DermatologyAPI.Models
         [Required]
         public required DateTime ConsultationDate { get; set; }
 
-
-
         [StringLength(1000)]
         public string? Description { get; set; }
 

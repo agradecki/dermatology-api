@@ -87,16 +87,9 @@ namespace DermatologyApi.Services
             }
 
 
-            var diagnosis = new Diagnosis
-            {
-                PatientId = diagnosisDto.PatientId,
-                DermatologistId = diagnosisDto.DermatologistId,
-                LesionId = diagnosisDto.LesionId,
-                DiagnosisDate = diagnosisDto.DiagnosisDate,
-                Description = diagnosisDto.Description,
-            };
-
+            var diagnosis = DiagnosisMapper.MapFromCreateDto(diagnosisDto);
             var createdDiagnosis = await _diagnosisRepository.CreateAsync(diagnosis);
+
             return DiagnosisMapper.MapToDto(createdDiagnosis);
         }
 
@@ -134,11 +127,7 @@ namespace DermatologyApi.Services
                 throw new PreconditionFailedException("The diagnosis has been modified since it was last retrieved");
             }
 
-            existingDiagnosis.PatientId = diagnosisDto.PatientId;
-            existingDiagnosis.DermatologistId = diagnosisDto.DermatologistId;
-            existingDiagnosis.LesionId = diagnosisDto.LesionId;
-            existingDiagnosis.DiagnosisDate = diagnosisDto.DiagnosisDate;
-            existingDiagnosis.Description = diagnosisDto.Description;
+            DiagnosisMapper.MapFromUpdateDto(existingDiagnosis, diagnosisDto);
 
             try
             {

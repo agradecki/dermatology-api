@@ -56,15 +56,7 @@ namespace DermatologyApi.Services
                 throw new ConflictException($"Email {patientDto.Email} is already in use");
             }
 
-            var patient = new Patient
-            {
-                FirstName = patientDto.FirstName,
-                LastName = patientDto.LastName,
-                DateOfBirth = patientDto.DateOfBirth,
-                PhoneNumber = patientDto.PhoneNumber,
-                Email = patientDto.Email,
-                Address = patientDto.Address,
-            };
+            var patient = PatientMapper.MapFromCreateDto(patientDto);
 
             var createdPatient = await _patientRepository.CreateAsync(patient);
             return PatientMapper.MapToDto(createdPatient);
@@ -89,12 +81,7 @@ namespace DermatologyApi.Services
                 throw new ConflictException($"Email {patientDto.Email} is already in use by another patient");
             }
 
-            existingPatient.FirstName = patientDto.FirstName;
-            existingPatient.LastName = patientDto.LastName;
-            existingPatient.DateOfBirth = patientDto.DateOfBirth;
-            existingPatient.PhoneNumber = patientDto.PhoneNumber;
-            existingPatient.Email = patientDto.Email;
-            existingPatient.Address = patientDto.Address;
+            PatientMapper.MapFromUpdateDto(existingPatient, patientDto);
 
             try
             {

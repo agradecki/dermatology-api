@@ -27,7 +27,7 @@ namespace DermatologyApi.Mappers
             };
         }
 
-        public static void MapFromUpdateDto(ConsultationUpdateDto dto, Consultation entity)
+        public static void MapFromUpdateDto(Consultation entity, ConsultationUpdateDto dto)
         {
             entity.PatientId = dto.PatientId;
             entity.DermatologistId = dto.DermatologistId;

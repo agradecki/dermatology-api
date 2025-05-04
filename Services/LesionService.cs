@@ -54,14 +54,8 @@ namespace DermatologyApi.Services
                 throw new NotFoundException($"Patient with id {lesionDto.PatientId} not found.");
             }
 
-            var lesion = new Lesion
-            {
-                PatientId = lesionDto.PatientId,
-                Location = lesionDto.Location,
-                DiscoveryDate = lesionDto.DiscoveryDate,
-                Description = lesionDto.Description,
-                Patient = patient,
-            };
+            var lesion = LesionMapper.MapFromCreateDto(lesionDto);
+            lesion.Patient = patient;
 
             var createdLesion = await _lesionRepository.CreateAsync(lesion);
             return LesionMapper.MapToDto(createdLesion);
@@ -86,10 +80,7 @@ namespace DermatologyApi.Services
                 throw new PreconditionFailedException("The lesion has been modified since it was last retrieved");
             }
 
-            existingLesion.PatientId = lesionDto.PatientId;
-            existingLesion.Location = lesionDto.Location;
-            existingLesion.DiscoveryDate = lesionDto.DiscoveryDate;
-            existingLesion.Description = lesionDto.Description;
+            LesionMapper.MapFromUpdateDto(lesionDto, existingLesion);
 
             try
             {

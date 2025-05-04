@@ -16,5 +16,23 @@ namespace DermatologyApi.Mappers
                 Description = lesion.Description,
             };
         }
+        public static Lesion MapFromCreateDto(LesionCreateDto dto)
+        {
+            return new Lesion
+            {
+                PatientId = dto.PatientId,
+                Location = dto.Location,
+                DiscoveryDate = dto.DiscoveryDate,
+                Description = dto.Description,
+            };
+        }
+
+        public static void MapFromUpdateDto(LesionUpdateDto dto, Lesion entity)
+        {
+            entity.PatientId = dto.PatientId;
+            entity.Location = dto.Location;
+            entity.DiscoveryDate = dto.DiscoveryDate;
+            entity.Description = dto.Description;
+        }
     }
 }

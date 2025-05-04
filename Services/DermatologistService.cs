@@ -51,17 +51,9 @@ namespace DermatologyApi.Services
 
         public async Task<DermatologistDto> CreateDermatologistAsync(DermatologistCreateDto dermatologistDto)
         {
-            var dermatologist = new Dermatologist
-            {
-                FirstName = dermatologistDto.FirstName,
-                LastName = dermatologistDto.LastName,
-                LicenseNumber = dermatologistDto.LicenseNumber,
-                Specialization = dermatologistDto.Specialization,
-                Email = dermatologistDto.Email,
-                PhoneNumber = dermatologistDto.PhoneNumber
-            };
-
+            var dermatologist = DermatologistMapper.MapFromCreateDto(dermatologistDto);
             var createdDermatologist = await _dermatologistRepository.CreateAsync(dermatologist);
+            
             return DermatologistMapper.MapToDto(createdDermatologist);
         }
 
@@ -78,12 +70,7 @@ namespace DermatologyApi.Services
                 throw new PreconditionFailedException("The dermatologist has been modified since it was last retrieved");
             }
 
-            existingDermatologist.FirstName = dermatologistDto.FirstName;
-            existingDermatologist.LastName = dermatologistDto.LastName;
-            existingDermatologist.LicenseNumber = dermatologistDto.LicenseNumber;
-            existingDermatologist.Specialization = dermatologistDto.Specialization;
-            existingDermatologist.Email = dermatologistDto.Email;
-            existingDermatologist.PhoneNumber = dermatologistDto.PhoneNumber;
+            DermatologistMapper.MapFromUpdateDto(existingDermatologist, dermatologistDto);
 
             try
             {
