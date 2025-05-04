@@ -12,5 +12,6 @@ namespace DermatologyApi.Data.Repositories
         Task<Diagnosis> UpdateAsync(Diagnosis diagnosis);
         Task<bool> DeleteAsync(int id);
         Task<bool> DiagnosisExistsAsync(int patientId, int dermatologistId, DateTime date);
+        Task<Diagnosis> GetByPatientDateAndDermatologistAsync(int patientId, DateTime date, int dermatologistId);
     }
 }

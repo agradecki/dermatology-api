@@ -77,6 +77,16 @@ namespace DermatologyApi.Services
                 }
             }
 
+            // POST ONCE
+            var existingDiagnosis = await _diagnosisRepository.GetByPatientDateAndDermatologistAsync(
+                diagnosisDto.PatientId, diagnosisDto.DiagnosisDate, diagnosisDto.DermatologistId);
+
+            if (existingDiagnosis != null)
+            {
+                throw new ConflictException("Diagnosis for this patient, date, and dermatologist already exists.");
+            }
+
+
             var diagnosis = new Diagnosis
             {
                 PatientId = diagnosisDto.PatientId,

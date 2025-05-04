@@ -80,5 +80,12 @@ namespace DermatologyApi.Data.Repositories
                 d.DermatologistId == dermatologistId &&
                 d.DiagnosisDate.Date == date.Date);
         }
+        public async Task<Diagnosis> GetByPatientDateAndDermatologistAsync(int patientId, DateTime date, int dermatologistId)
+        {
+            return await _context.Diagnoses
+                .FirstOrDefaultAsync(d => d.PatientId == patientId
+                                       && d.DiagnosisDate.Date == date.Date
+                                       && d.DermatologistId == dermatologistId);
+        }
     }
 }
