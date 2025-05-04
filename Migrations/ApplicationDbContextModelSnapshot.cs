@@ -243,9 +243,6 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("ConsultationId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("NewDateTime")
                         .HasColumnType("timestamp with time zone");
 

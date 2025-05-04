@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DermatologyApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250501234218_InitialMiration")]
-    partial class InitialMiration
+    [Migration("20250504091229_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -233,6 +233,25 @@ namespace DermatologyApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Patients");
+                });
+
+            modelBuilder.Entity("DermatologyAPI.Models.Transfer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsultationId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("NewDateTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Transfers");
                 });
 
             modelBuilder.Entity("DermatologyAPI.Models.Consultation", b =>

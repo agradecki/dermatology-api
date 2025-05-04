@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DermatologyApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMiration : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,7 +24,7 @@ namespace DermatologyApi.Migrations
                     Specialization = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false, defaultValue: new byte[8])
+                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false,defaultValue: new byte[8])
                 },
                 constraints: table =>
                 {
@@ -48,6 +48,20 @@ namespace DermatologyApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Patients", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Transfers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    ConsultationId = table.Column<int>(type: "integer", nullable: false),
+                    NewDateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transfers", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -177,6 +191,9 @@ namespace DermatologyApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Diagnoses");
+
+            migrationBuilder.DropTable(
+                name: "Transfers");
 
             migrationBuilder.DropTable(
                 name: "Dermatologists");
