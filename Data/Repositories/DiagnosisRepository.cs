@@ -14,15 +14,12 @@ namespace DermatologyApi.Data.Repositories
 
         public async Task<IEnumerable<Diagnosis>> GetAllAsync()
         {
-            return await _context.Diagnoses
-                .Include(d => d.Lesion)
-                .ToListAsync();
+            return await _context.Diagnoses.ToListAsync();
         }
 
         public async Task<IEnumerable<Diagnosis>> GetByPatientIdAsync(int patientId)
         {
             return await _context.Diagnoses
-                .Include(d => d.Lesion)
                 .Where(d => d.PatientId == patientId)
                 .ToListAsync();
         }
@@ -30,7 +27,6 @@ namespace DermatologyApi.Data.Repositories
         public async Task<IEnumerable<Diagnosis>> GetByDermatologistIdAsync(int dermatologistId)
         {
             return await _context.Diagnoses
-                .Include(d => d.Lesion)
                 .Where(d => d.DermatologistId == dermatologistId)
                 .ToListAsync();
         }
@@ -38,7 +34,6 @@ namespace DermatologyApi.Data.Repositories
         public async Task<Diagnosis> GetByIdAsync(int id)
         {
             return await _context.Diagnoses
-                .Include(d => d.Lesion)
                 .FirstOrDefaultAsync(d => d.Id == id);
         }
 

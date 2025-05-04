@@ -14,16 +14,12 @@ namespace DermatologyApi.Data.Repositories
 
         public async Task<IEnumerable<Lesion>> GetAllAsync()
         {
-            return await _context.Lesions
-                .Include(l => l.Patient)
-                .ToListAsync();
+            return await _context.Lesions.ToListAsync();
         }
 
         public async Task<Lesion> GetByIdAsync(int id)
         {
-            return await _context.Lesions
-                .Include(l => l.Patient)
-                .FirstOrDefaultAsync(l => l.Id == id);
+            return await _context.Lesions.FirstOrDefaultAsync(l => l.Id == id);
         }
 
         public async Task<Lesion> CreateAsync(Lesion lesion)

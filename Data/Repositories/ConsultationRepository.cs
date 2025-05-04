@@ -15,10 +15,7 @@ namespace DermatologyApi.Data.Repositories
 
         public async Task<PaginatedResponseDto<Consultation>> GetAllAsync(int page, int size)
         {
-            var query = _context.Consultations
-                .Include(c => c.Patient)
-                .Include(c => c.Dermatologist)
-                .AsQueryable();
+            var query = _context.Consultations.AsQueryable();
 
             var totalItems = await query.CountAsync();
             var totalPages = (int)Math.Ceiling(totalItems / (double)size);
@@ -41,7 +38,6 @@ namespace DermatologyApi.Data.Repositories
         public async Task<IEnumerable<Consultation>> GetByPatientIdAsync(int patientId)
         {
             return await _context.Consultations
-                .Include(c => c.Dermatologist)
                 .Where(c => c.PatientId == patientId)
                 .ToListAsync();
         }
@@ -49,7 +45,6 @@ namespace DermatologyApi.Data.Repositories
         public async Task<IEnumerable<Consultation>> GetByDermatologistIdAsync(int dermatologistId)
         {
             return await _context.Consultations
-                .Include(c => c.Patient)
                 .Where(c => c.DermatologistId == dermatologistId)
                 .ToListAsync();
         }
@@ -124,8 +119,6 @@ namespace DermatologyApi.Data.Repositories
         public async Task<(IEnumerable<Consultation> Consultations, int TotalCount)> GetPagedAsync(int page, int size)
         {
             var query = _context.Consultations
-                .Include(c => c.Patient)
-                .Include(c => c.Dermatologist)
                 .AsQueryable();
 
             var totalCount = await query.CountAsync();
