@@ -36,6 +36,11 @@ namespace DermatologyApi.Middleware
                 _logger.LogWarning(ex, "PreconditionFailedException");
                 await HandleExceptionAsync(context, StatusCodes.Status412PreconditionFailed, ex.Message);
             }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "InvalidOperationException");
+                await HandleExceptionAsync(context, StatusCodes.Status400BadRequest, ex.Message);
+            }
             catch (ValidationException ex)
             {
                 _logger.LogWarning(ex, "ValidationException");
