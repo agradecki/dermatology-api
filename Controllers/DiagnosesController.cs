@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using DermatologyApi.Exceptions;
+using System.ComponentModel;
 
 namespace DermatologyApi.Controllers
 {
@@ -44,9 +45,14 @@ namespace DermatologyApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<DiagnosisDto>> CreateDiagnosis(DiagnosisCreateDto diagnosisDto)
+        public async Task<ActionResult<DiagnosisDto>> CreateDiagnosis(DiagnosisCreateDto diagnosisDto, [FromHeader(Name = "Idempotency-Key")] string idempotencyKey)
         {
-            var diagnosis = await _diagnosisService.CreateDiagnosisAsync(diagnosisDto);
+            if (string.IsNullOrEmpty(idempotencyKey))
+            {
+                return BadRequest("Idempotency-Key header is required");
+            }
+            
+            var diagnosis = await _diagnosisService.CreateDiagnosisWithIdempotencyAsync(diagnosisDto, idempotencyKey);
             return CreatedAtAction(nameof(GetDiagnosisById), new { id = diagnosis.Id }, diagnosis);
         }
 

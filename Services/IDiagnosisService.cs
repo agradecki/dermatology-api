@@ -8,7 +8,8 @@ namespace DermatologyApi.Services
         Task<Diagnosis> GetDiagnosisEntityByIdAsync(int id);
         Task<IEnumerable<DiagnosisDto>> GetAllDiagnosesAsync();
         Task<DiagnosisDto> GetDiagnosisByIdAsync(int id);
-        Task<DiagnosisDto> CreateDiagnosisAsync(DiagnosisCreateDto diagnosisDto);
+        Task<DiagnosisDto> CreateDiagnosisAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey);
+        Task<DiagnosisDto> CreateDiagnosisWithIdempotencyAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey);
         Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, byte[] rowVersion);
         Task<bool> DeleteDiagnosisAsync(int id);
     }

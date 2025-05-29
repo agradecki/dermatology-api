@@ -1,4 +1,5 @@
-﻿using DermatologyAPI.Models;
+﻿using DermatologyApi.Models;
+using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Data
@@ -17,6 +18,8 @@ namespace DermatologyApi.Data
         public DbSet<Diagnosis> Diagnoses {  get; set; }
         public DbSet<Consultation> Consultations {  get; set; }
         public DbSet<Transfer> Transfers { get; set; }
+
+        public DbSet<IdempotencyRecord> IdempotencyRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -57,6 +60,13 @@ namespace DermatologyApi.Data
                 .WithOne(d => d.Lesion)
                 .HasForeignKey(d => d.LesionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<IdempotencyRecord>(entity =>
+            {
+                entity.HasKey(e => e.Key);
+                entity.Property(e => e.Key).HasMaxLength(255);
+                entity.Property(e => e.Status).HasMaxLength(50);
+            });
         }
     }
 }

@@ -2,8 +2,10 @@
 using DermatologyApi.DTOs;
 using DermatologyApi.Exceptions;
 using DermatologyApi.Mappers;
+using DermatologyApi.Models;
 using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace DermatologyApi.Services
 {
@@ -13,17 +15,20 @@ namespace DermatologyApi.Services
         private readonly IPatientRepository _patientRepository;
         private readonly IDermatologistRepository _dermatologistRepository;
         private readonly ILesionRepository _lesionRepository;
+        private readonly IIdempotencyRepository _idempotencyRepository;
 
         public DiagnosisService(
             IDiagnosisRepository diagnosisRepository,
             IPatientRepository patientRepository,
             IDermatologistRepository dermatologistRepository,
-            ILesionRepository lesionRepository)
+            ILesionRepository lesionRepository,
+            IIdempotencyRepository idempotencyRepository)
         {
             _diagnosisRepository = diagnosisRepository;
             _patientRepository = patientRepository;
             _dermatologistRepository = dermatologistRepository;
             _lesionRepository = lesionRepository;
+            _idempotencyRepository = idempotencyRepository;
         }
 
         public async Task<Diagnosis> GetDiagnosisEntityByIdAsync(int id)
@@ -54,7 +59,7 @@ namespace DermatologyApi.Services
             return DiagnosisMapper.MapToDto(diagnosis);
         }
 
-        public async Task<DiagnosisDto> CreateDiagnosisAsync(DiagnosisCreateDto diagnosisDto)
+        public async Task<DiagnosisDto> CreateDiagnosisAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey)
         {
             var patient = await _patientRepository.GetByIdAsync(diagnosisDto.PatientId);
             if (patient == null)
@@ -77,20 +82,15 @@ namespace DermatologyApi.Services
                 }
             }
 
-            // POST ONCE
-            var existingDiagnosis = await _diagnosisRepository.GetByPatientDateAndDermatologistAsync(
-                diagnosisDto.PatientId, diagnosisDto.DiagnosisDate, diagnosisDto.DermatologistId);
-
-            if (existingDiagnosis != null)
-            {
-                throw new ConflictException("Diagnosis for this patient, date, and dermatologist already exists.");
-            }
-
-
             var diagnosis = DiagnosisMapper.MapFromCreateDto(diagnosisDto);
             var createdDiagnosis = await _diagnosisRepository.CreateAsync(diagnosis);
 
             return DiagnosisMapper.MapToDto(createdDiagnosis);
+        }
+
+        public async Task<DiagnosisDto> CreateDiagnosisWithIdempotencyAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey)
+        {
+            return await ExecuteWithIdempotencyAsync(idempotencyKey, () => CreateDiagnosisAsync(diagnosisDto, idempotencyKey));
         }
 
         public async Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, byte[] rowVersion)
@@ -159,6 +159,48 @@ namespace DermatologyApi.Services
             }
 
             return true;
+        }
+
+        private async Task<T> ExecuteWithIdempotencyAsync<T>(string idempotencyKey, Func<Task<T>> operation)
+        {
+            var existingOperation = await _idempotencyRepository.GetByKeyAsync(idempotencyKey);
+            if (existingOperation != null)
+            {
+                if (existingOperation.Status == "Completed")
+                {
+                    return JsonSerializer.Deserialize<T>(existingOperation.Result);
+                }
+
+                if (existingOperation.Status == "InProgress")
+                {
+                    throw new ConflictException("Operation in progress");
+                }
+
+                if (existingOperation.Status == "Failed")
+                {
+                    throw new ConflictException($"Previous operation failed: {existingOperation.ErrorMessage}");
+                }
+            }
+
+            await _idempotencyRepository.CreateAsync(new IdempotencyRecord
+            {
+                Key = idempotencyKey,
+                Status = "InProgress",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            try
+            {
+                var result = await operation();
+                await _idempotencyRepository.UpdateResultAsync(idempotencyKey,
+                    JsonSerializer.Serialize(result), "Completed");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await _idempotencyRepository.UpdateStatusAsync(idempotencyKey, "Failed", ex.Message);
+                throw;
+            }
         }
     }
 }
