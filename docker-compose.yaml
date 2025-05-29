@@ -5,6 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    restart: on-failure
     ports:
       - "5555:80"
       - "8443:443"

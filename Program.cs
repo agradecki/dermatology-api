@@ -31,6 +31,7 @@ builder.Services.AddScoped<IDermatologistRepository, DermatologistRepository>();
 builder.Services.AddScoped<ILesionRepository, LesionRepository>();
 builder.Services.AddScoped<IDiagnosisRepository, DiagnosisRepository>();
 builder.Services.AddScoped<IConsultationRepository, ConsultationRepository>();
+builder.Services.AddScoped<IIdempotencyRepository, IdempotencyRepository>();
 
 // Register services
 builder.Services.AddScoped<IPatientService, PatientService>();
@@ -77,11 +78,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-//Migrations
-//using (var scope = app.Services.CreateScope())
-//{
-//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    dbContext.Database.Migrate();
-//}
+// Migrations
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();
