@@ -22,8 +22,7 @@ namespace DermatologyAPI.Models
         [StringLength(500)]
         public required string Description {  get; set; }
 
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[8];
+        public uint Xmin { get; set; }
 
         [ForeignKey("PatientId")]
         public Patient? Patient { get; set; }

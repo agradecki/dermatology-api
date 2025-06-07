@@ -26,34 +26,39 @@ namespace DermatologyApi.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Patient>()
-            .Property(p => p.RowVersion)
-            .IsConcurrencyToken()
-            .IsRowVersion()
-            .ValueGeneratedOnAddOrUpdate();
+                .Property(p => p.Xmin)
+                .IsConcurrencyToken()
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate();
 
             modelBuilder.Entity<Dermatologist>()
-            .Property(p => p.RowVersion)
-            .IsConcurrencyToken()
-            .IsRowVersion()
-            .ValueGeneratedOnAddOrUpdate();
+                .Property(d => d.Xmin)
+                .IsConcurrencyToken()
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate();
 
             modelBuilder.Entity<Lesion>()
-            .Property(p => p.RowVersion)
-            .IsConcurrencyToken()
-            .IsRowVersion()
-            .ValueGeneratedOnAddOrUpdate();
+                .Property(l => l.Xmin)
+                .IsConcurrencyToken()
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate();
 
             modelBuilder.Entity<Diagnosis>()
-            .Property(p => p.RowVersion)
-            .IsConcurrencyToken()
-            .IsRowVersion()
-            .ValueGeneratedOnAddOrUpdate();
+                .Property(d => d.Xmin)
+                .IsConcurrencyToken()
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate();
 
             modelBuilder.Entity<Consultation>()
-            .Property(p => p.RowVersion)
-            .IsConcurrencyToken()
-            .IsRowVersion()
-            .ValueGeneratedOnAddOrUpdate();
+                .Property(c => c.Xmin)
+                .IsConcurrencyToken()
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate();
 
             modelBuilder.Entity<Lesion>()
                 .HasMany(l => l.Diagnoses)

@@ -62,7 +62,7 @@ namespace DermatologyApi.Services
             return PatientMapper.MapToDto(createdPatient);
         }
 
-        public async Task<PatientDto> UpdatePatientAsync(int id, PatientUpdateDto patientDto, byte[] rowVersion)
+        public async Task<PatientDto> UpdatePatientAsync(int id, PatientUpdateDto patientDto, uint expectedXmin)
         {
             var existingPatient = await _patientRepository.GetByIdAsync(id);
             if (existingPatient == null)
@@ -70,7 +70,7 @@ namespace DermatologyApi.Services
                 throw new NotFoundException($"Patient with ID {id} not found");
             }
 
-            if (!existingPatient.RowVersion.SequenceEqual(rowVersion))
+            if (existingPatient.Xmin != expectedXmin)
             {
                 throw new PreconditionFailedException("The patient has been modified since it was last retrieved");
             }

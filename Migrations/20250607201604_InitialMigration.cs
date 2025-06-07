@@ -24,11 +24,27 @@ namespace DermatologyApi.Migrations
                     Specialization = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     PhoneNumber = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false,defaultValue: new byte[8])
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Dermatologists", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "IdempotencyRecords",
+                columns: table => new
+                {
+                    Key = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Result = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ErrorMessage = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_IdempotencyRecords", x => x.Key);
                 });
 
             migrationBuilder.CreateTable(
@@ -43,7 +59,7 @@ namespace DermatologyApi.Migrations
                     PhoneNumber = table.Column<string>(type: "character varying(15)", maxLength: 15, nullable: false),
                     Email = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Address = table.Column<string>(type: "text", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false, defaultValue: new byte[8])
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -74,7 +90,7 @@ namespace DermatologyApi.Migrations
                     DermatologistId = table.Column<int>(type: "integer", nullable: false),
                     ConsultationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false, defaultValue: new byte[8])
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -103,7 +119,7 @@ namespace DermatologyApi.Migrations
                     Location = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     DiscoveryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false, defaultValue: new byte[8])
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -127,7 +143,7 @@ namespace DermatologyApi.Migrations
                     LesionId = table.Column<int>(type: "integer", nullable: false),
                     DiagnosisDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false, defaultValue: new byte[8])
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -191,6 +207,9 @@ namespace DermatologyApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Diagnoses");
+
+            migrationBuilder.DropTable(
+                name: "IdempotencyRecords");
 
             migrationBuilder.DropTable(
                 name: "Transfers");

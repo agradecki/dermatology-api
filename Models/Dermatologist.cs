@@ -32,7 +32,6 @@ namespace DermatologyAPI.Models
         [StringLength(50)]
         public required string PhoneNumber { get; set; }
 
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[8];
+        public uint Xmin { get; set; }
     }
 }

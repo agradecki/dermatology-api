@@ -30,7 +30,6 @@ namespace DermatologyAPI.Models
         [Required]
         public required string Address { get; set; }
 
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[8];
+        public uint Xmin { get; set; }
     }
 }

@@ -14,7 +14,7 @@ namespace DermatologyApi.Controllers
             _transferService = transferService;
         }
 
-        [HttpPost("transfers")]
+        [HttpPost()]
         public async Task<ActionResult> TransferConsultations(TransferRequest[] transfers)
         {
             await _transferService.TransferConsultationsAsync(transfers);

@@ -9,7 +9,7 @@ namespace DermatologyApi.Services
         Task<IEnumerable<DermatologistDto>> GetAllDermatologistsAsync();
         Task<DermatologistDto> GetDermatologistByIdAsync(int id);
         Task<DermatologistDto> CreateDermatologistAsync(DermatologistCreateDto dermatologistDto);
-        Task<DermatologistDto> UpdateDermatologistAsync(int id, DermatologistUpdateDto dermatologistDto, byte[] rowVersion);
+        Task<DermatologistDto> UpdateDermatologistAsync(int id, DermatologistUpdateDto dermatologistDto, uint expectedXmin);
         Task<DermatologistDto> PatchDermatologistAsync(int id, DermatologistPatchDto dermatologistDto);
         Task<bool> DeleteDermatologistAsync(int id);
         Task<IEnumerable<DiagnosisDto>> GetDermatologistDiagnosesAsync(int dermatologistId);

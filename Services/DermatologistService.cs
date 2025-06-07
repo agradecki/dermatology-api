@@ -57,7 +57,7 @@ namespace DermatologyApi.Services
             return DermatologistMapper.MapToDto(createdDermatologist);
         }
 
-        public async Task<DermatologistDto> UpdateDermatologistAsync(int id, DermatologistUpdateDto dermatologistDto, byte[] rowVersion)
+        public async Task<DermatologistDto> UpdateDermatologistAsync(int id, DermatologistUpdateDto dermatologistDto, uint expectedXmin)
         {
             var existingDermatologist = await _dermatologistRepository.GetByIdAsync(id);
             if (existingDermatologist == null)
@@ -65,7 +65,7 @@ namespace DermatologyApi.Services
                 throw new NotFoundException($"Dermatologist with id {id} not found.");
             }
 
-            if (!existingDermatologist.RowVersion.SequenceEqual(rowVersion))
+            if (existingDermatologist.Xmin != expectedXmin)
             {
                 throw new PreconditionFailedException("The dermatologist has been modified since it was last retrieved");
             }

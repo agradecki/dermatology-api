@@ -87,7 +87,7 @@ namespace DermatologyApi.Services
             return ConsultationMapper.MapToDto(createdConsultation);
         }
 
-        public async Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, byte[] rowVersion)
+        public async Task<ConsultationDto> UpdateConsultationAsync(int id, ConsultationUpdateDto consultationDto, uint expectedXmin)
         {
             var existingConsultation = await _consultationRepository.GetByIdAsync(id);
             if (existingConsultation == null)
@@ -95,7 +95,7 @@ namespace DermatologyApi.Services
                 throw new KeyNotFoundException($"Consultation with ID {id} not found");
             }
 
-            if (!existingConsultation.RowVersion.SequenceEqual(rowVersion))
+            if (existingConsultation.Xmin != expectedXmin)
             {
                 throw new PreconditionFailedException("The consultation has been modified since it was last retrieved");
             }

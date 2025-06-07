@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DermatologyApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250504091229_InitialMigration")]
+    [Migration("20250607201604_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -46,11 +46,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -94,16 +94,16 @@ namespace DermatologyApi.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
-
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<uint>("Xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -135,11 +135,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -176,11 +176,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -224,11 +224,11 @@ namespace DermatologyApi.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -252,6 +252,34 @@ namespace DermatologyApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Transfers");
+                });
+
+            modelBuilder.Entity("DermatologyApi.Models.IdempotencyRecord", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Result")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("IdempotencyRecords");
                 });
 
             modelBuilder.Entity("DermatologyAPI.Models.Consultation", b =>

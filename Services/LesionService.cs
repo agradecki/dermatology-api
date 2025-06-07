@@ -61,7 +61,7 @@ namespace DermatologyApi.Services
             return LesionMapper.MapToDto(createdLesion);
         }
 
-        public async Task<LesionDto> UpdateLesionAsync(int id, LesionUpdateDto lesionDto, byte[] rowVersion)
+        public async Task<LesionDto> UpdateLesionAsync(int id, LesionUpdateDto lesionDto, uint expectedXmin)
         {
             var patient = await _patientRepository.GetByIdAsync(lesionDto.PatientId);
             if (patient == null)
@@ -75,7 +75,7 @@ namespace DermatologyApi.Services
                 throw new NotFoundException($"Lesion with id {id} not found.");
             }
 
-            if (!existingLesion.RowVersion.SequenceEqual(rowVersion))
+            if (existingLesion.Xmin != expectedXmin)
             {
                 throw new PreconditionFailedException("The lesion has been modified since it was last retrieved");
             }

@@ -93,7 +93,7 @@ namespace DermatologyApi.Services
             return await ExecuteWithIdempotencyAsync(idempotencyKey, () => CreateDiagnosisAsync(diagnosisDto, idempotencyKey));
         }
 
-        public async Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, byte[] rowVersion)
+        public async Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, uint expectedXmin)
         {
             var patient = await _patientRepository.GetByIdAsync(diagnosisDto.PatientId);
             if (patient == null)
@@ -122,7 +122,7 @@ namespace DermatologyApi.Services
                 throw new NotFoundException($"Diagnosis with ID {id} not found");
             }
 
-            if (!existingDiagnosis.RowVersion.SequenceEqual(rowVersion))
+            if (existingDiagnosis.Xmin != expectedXmin)
             {
                 throw new PreconditionFailedException("The diagnosis has been modified since it was last retrieved");
             }

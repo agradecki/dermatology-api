@@ -43,11 +43,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -91,16 +91,16 @@ namespace DermatologyApi.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
-
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<uint>("Xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -132,11 +132,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -173,11 +173,11 @@ namespace DermatologyApi.Migrations
                     b.Property<int>("PatientId")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -221,11 +221,11 @@ namespace DermatologyApi.Migrations
                         .HasMaxLength(15)
                         .HasColumnType("character varying(15)");
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<uint>("Xmin")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

@@ -35,7 +35,7 @@ namespace DermatologyApi.Controllers
             if (diagnosis == null)
                 return NotFound();
 
-            var etag = Convert.ToBase64String(diagnosis.RowVersion);
+            var etag = diagnosis.Xmin.ToString();
             var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
             if (etag == ifNoneMatch)
                 return StatusCode(304);
@@ -66,17 +66,22 @@ namespace DermatologyApi.Controllers
             }
 
             var diagnosis = await _diagnosisService.GetDiagnosisEntityByIdAsync(id);
-            var etag = Convert.ToBase64String(diagnosis.RowVersion);
+            var etag = diagnosis.Xmin.ToString();
 
             if (etagBase64 != etag)
             {
                 throw new PreconditionFailedException("Precondition failed: The resource has been modified by anther user.");
             }
 
-            var updatedDiagnosis = await _diagnosisService.UpdateDiagnosisAsync(id, diagnosisDto, Convert.FromBase64String(etag));
+            if (!uint.TryParse(etag, out uint expectedXmin))
+            {
+                return BadRequest("Invalid ETag format");
+            }
+
+            var updatedDiagnosis = await _diagnosisService.UpdateDiagnosisAsync(id, diagnosisDto, expectedXmin);
 
             diagnosis = await _diagnosisService.GetDiagnosisEntityByIdAsync(id);
-            etag = Convert.ToBase64String(diagnosis.RowVersion);
+            etag = diagnosis.Xmin.ToString();
 
             Response.Headers["ETag"] = etag;
             return Ok(updatedDiagnosis);

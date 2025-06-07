@@ -1,4 +1,5 @@
-﻿using DermatologyAPI.Models;
+﻿using DermatologyApi.Exceptions;
+using DermatologyAPI.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace DermatologyApi.Data.Repositories
@@ -31,16 +32,28 @@ namespace DermatologyApi.Data.Repositories
 
         public async Task<Patient> UpdateAsync(Patient patient)
         {
-            _context.Entry(patient).State = EntityState.Modified; ;
+            var existingEntity = await _context.Patients.FindAsync(patient.Id);
+            if (existingEntity == null)
+            { 
+                throw new NotFoundException($"Patient with ID {patient.Id} not found");
+            }
+
+            _context.Entry(existingEntity).CurrentValues.SetValues(patient);
             await _context.SaveChangesAsync();
-            return patient;
+
+            return existingEntity;
         }
 
         public async Task<Patient> PatchAsync(Patient patient)
         {
-            _context.Entry(patient).State = EntityState.Modified;
+            var existingEntity = await _context.Patients.FindAsync(patient.Id);
+            if (existingEntity == null)
+                throw new NotFoundException($"Patient with ID {patient.Id} not found");
+
+            _context.Entry(existingEntity).CurrentValues.SetValues(patient);
             await _context.SaveChangesAsync();
-            return patient;
+
+            return existingEntity;
         }
 
         public async Task<bool> DeleteAsync(int id)

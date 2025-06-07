@@ -9,7 +9,7 @@ namespace DermatologyApi.Services
         Task<IEnumerable<LesionDto>> GetAllLesionsAsync();
         Task<LesionDto> GetLesionByIdAsync(int id);
         Task<LesionDto> CreateLesionAsync(LesionCreateDto lesionDto);
-        Task<LesionDto> UpdateLesionAsync(int id, LesionUpdateDto lesionDto, byte[] rowVersion);
+        Task<LesionDto> UpdateLesionAsync(int id, LesionUpdateDto lesionDto, uint expectedXmin);
         Task<LesionDto> PatchLesionAsync(int id, LesionPatchDto lesionDto);
         Task<bool> DeleteLesionAsync(int id);
     }

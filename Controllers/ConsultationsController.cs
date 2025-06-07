@@ -31,7 +31,7 @@ namespace DermatologyApi.Controllers
         public async Task<ActionResult<ConsultationDto>> GetConsultationById(int id)
         {
             var consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
-            var etag = Convert.ToBase64String(consultation.RowVersion);
+            var etag = consultation.Xmin.ToString();
 
             var ifNoneMatch = Request.Headers["If-None-Match"].ToString();
             if (etag == ifNoneMatch)
@@ -56,17 +56,22 @@ namespace DermatologyApi.Controllers
                 throw new ValidationException("ETag header is required.");
 
             var consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
-            var etag = Convert.ToBase64String(consultation.RowVersion);
+            var etag = consultation.Xmin.ToString();
 
             if (etagBase64 != etag)
             {
                 throw new PreconditionFailedException("Precondition failed: The resource has been modified by another user.");
             }
 
-            var updatedConsultation = await _consultationService.UpdateConsultationAsync(id, consultationDto, Convert.FromBase64String(etag));
+            if (!uint.TryParse(etag, out uint expectedXmin))
+            {
+                return BadRequest("Invalid ETag format");
+            }
+
+            var updatedConsultation = await _consultationService.UpdateConsultationAsync(id, consultationDto, expectedXmin);
 
             consultation = await _consultationService.GetConsultationEntityByIdAsync(id);
-            etag = Convert.ToBase64String(consultation.RowVersion);
+            etag = consultation.Xmin.ToString();
 
             Response.Headers["ETag"] = etag;
 

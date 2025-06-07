@@ -10,7 +10,7 @@ namespace DermatologyApi.Services
         Task<DiagnosisDto> GetDiagnosisByIdAsync(int id);
         Task<DiagnosisDto> CreateDiagnosisAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey);
         Task<DiagnosisDto> CreateDiagnosisWithIdempotencyAsync(DiagnosisCreateDto diagnosisDto, string idempotencyKey);
-        Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, byte[] rowVersion);
+        Task<DiagnosisDto> UpdateDiagnosisAsync(int id, DiagnosisUpdateDto diagnosisDto, uint expectedXmin);
         Task<bool> DeleteDiagnosisAsync(int id);
     }
 }
